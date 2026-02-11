@@ -91,6 +91,14 @@ iOSInjectionProject/
 
 # Mac OS
 .DS_Store
+.AppleDouble
+.LSOverride
+
+#Xcode
+*.xcuserstate
+*.xcuserdatad
+DerivedData/
+*.xcworkspace/xcuserdata/
 
 # Backup files
 *~.nib
