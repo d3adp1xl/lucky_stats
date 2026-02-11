@@ -11,9 +11,7 @@ import SwiftUI
 struct AnalysisView: View {
     
     @EnvironmentObject var viewModel: LotteryViewModel
-    @Environment(\.colorScheme) var colorScheme
-    
-    var body: some View {
+        var body: some View {
         NavigationView {
             VStack(spacing: 0) {
                 // Analysis navigation header
@@ -99,7 +97,7 @@ struct AnalysisView: View {
             Text(viewModel.currentAnalysis.rawValue)
                 .font(.title2)
                 .fontWeight(.bold)
-                .foregroundColor(colorScheme == .dark ? .white : .black)
+                .foregroundColor(Color(white: 0.9))
                 .frame(maxWidth: .infinity, alignment: .center)
         }
     }
@@ -155,7 +153,7 @@ struct AnalysisView: View {
             Text(viewModel.currentAnalysis.rawValue)
                 .font(.title2)
                 .fontWeight(.bold)
-                .foregroundColor(colorScheme == .dark ? .white : .black)
+                .foregroundColor(Color(white: 0.9))
                 .padding(.top, 4)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -166,7 +164,7 @@ struct AnalysisView: View {
     private var selectionInfo: some View {
         Text("\(viewModel.selectedDraws.count) selected")
             .font(.caption)
-            .foregroundColor(.secondary)
+            .foregroundColor(Color(white: 0.6))
     }
     
     // MARK: - Analysis Content
@@ -266,129 +264,532 @@ struct ExpandableSection<Content: View>: View {
     }
 }
 
+
 // MARK: - Frequency Analysis View
 
 struct FrequencyAnalysisView: View {
     @EnvironmentObject var viewModel: LotteryViewModel
-    @Environment(\.colorScheme) var colorScheme
+    @State private var currentPage = 0
     
     var body: some View {
         let frequencies = viewModel.analyzeFrequency()
-        let groupedByCount = groupNumbersByCount(frequencies)
+        let grouped = groupByCount(frequencies)
+        let itemsPerPage = 10
+        let totalPages = max(1, Int(ceil(Double(grouped.count) / Double(itemsPerPage))))
+        let startIdx = currentPage * itemsPerPage
+        let endIdx = min(startIdx + itemsPerPage, grouped.count)
+        let items = Array(grouped[startIdx..<endIdx])
         
         VStack(alignment: .leading, spacing: 15) {
-            Text("Shows which numbers appear most often in selected draws")
+            Text("Shows which numbers appear most often")
                 .font(.subheadline)
-                .foregroundColor(.secondary)
-                .padding(.bottom, 5)
+                .foregroundColor(Color(white: 0.6))
             
-            HStack {
-                Text("Appearances")
-                    .font(.caption)
-                    .fontWeight(.bold)
-                    .foregroundColor(.secondary)
-                    .frame(width: 90, alignment: .leading)
-                
-                Text("Numbers")
-                    .font(.caption)
-                    .fontWeight(.bold)
-                    .foregroundColor(.secondary)
-            }
-            .padding(.horizontal)
-            .padding(.vertical, 8)
-            .background(colorScheme == .dark ? Color(UIColor.systemGray5) : Color.gray.opacity(0.1))
-            .cornerRadius(8)
-            
-            ExpandableSection(totalCount: groupedByCount.count, showingLimit: 10) { isExpanded in
+            VStack(spacing: 10) {
+                HStack {
+                    Text("Page \(currentPage + 1) of \(totalPages)")
+                        .font(.headline)
+                        .foregroundColor(Color(white: 0.9))
+                    Spacer()
+                    HStack(spacing: 15) {
+                        Button(action: { if currentPage < totalPages - 1 { currentPage += 1 } }) {
+                            Image(systemName: "chevron.left.circle.fill")
+                                .font(.title3)
+                                .foregroundColor(currentPage < totalPages - 1 ? .blue : .gray)
+                        }
+                        .disabled(currentPage >= totalPages - 1)
+                        Button(action: { if currentPage > 0 { currentPage -= 1 } }) {
+                            Image(systemName: "chevron.right.circle.fill")
+                                .font(.title3)
+                                .foregroundColor(currentPage > 0 ? .blue : .gray)
+                        }
+                        .disabled(currentPage <= 0)
+                    }
+                }
                 VStack(spacing: 12) {
-                    ForEach(Array(groupedByCount.prefix(isExpanded ? groupedByCount.count : 10)), id: \.count) { group in
-                        FrequencyGroupRowMostCommon(
-                            count: group.count,
-                            numbers: group.numbers,
-                            colorScheme: colorScheme
-                        )
+                    ForEach(items, id: \.count) { group in
+                        FrequencyGroupRowMostCommon(count: group.count, numbers: group.numbers)
                     }
                 }
             }
+            .padding()
+            .background(RoundedRectangle(cornerRadius: 12).fill(Color(white: 0.1)))
         }
     }
     
-    private func groupNumbersByCount(_ frequencies: [NumberFrequency]) -> [(count: Int, numbers: [Int])] {
+    private func groupByCount(_ freqs: [NumberFrequency]) -> [(count: Int, numbers: [Int])] {
         var grouped: [Int: [Int]] = [:]
-        
-        for freq in frequencies {
-            if grouped[freq.count] == nil {
-                grouped[freq.count] = []
-            }
-            grouped[freq.count]?.append(freq.number)
-        }
-        
-        let result = grouped.map { (count: $0.key, numbers: $0.value.sorted()) }
-        return result.sorted { $0.count > $1.count }
+        for f in freqs { grouped[f.count, default: []].append(f.number) }
+        return grouped.map { (count: $0.key, numbers: $0.value.sorted()) }.sorted { $0.count > $1.count }
     }
 }
+
 // MARK: - Least Common Analysis View
 
-/// View showing least common numbers analysis in table format
 struct LeastCommonAnalysisView: View {
     @EnvironmentObject var viewModel: LotteryViewModel
-    @Environment(\.colorScheme) var colorScheme
+    @State private var currentPage = 0
     
     var body: some View {
-        let leastCommon = viewModel.analyzeLeastCommon()
-        let groupedByCount = groupNumbersByCount(leastCommon)
+        let frequencies = viewModel.analyzeLeastCommon()
+        let grouped = groupByCount(frequencies)
+        let itemsPerPage = 10
+        let totalPages = max(1, Int(ceil(Double(grouped.count) / Double(itemsPerPage))))
+        let startIdx = currentPage * itemsPerPage
+        let endIdx = min(startIdx + itemsPerPage, grouped.count)
+        let items = Array(grouped[startIdx..<endIdx])
         
         VStack(alignment: .leading, spacing: 15) {
-            Text("Shows numbers that appear least often in selected draws")
+            Text("Shows numbers that appear least often")
                 .font(.subheadline)
-                .foregroundColor(.secondary)
-                .padding(.bottom, 5)
+                .foregroundColor(Color(white: 0.6))
             
-            HStack {
-                Text("Appearances")
-                    .font(.caption)
-                    .fontWeight(.bold)
-                    .foregroundColor(.secondary)
-                    .frame(width: 90, alignment: .leading)
-                
-                Text("Numbers")
-                    .font(.caption)
-                    .fontWeight(.bold)
-                    .foregroundColor(.secondary)
-            }
-            .padding(.horizontal)
-            .padding(.vertical, 8)
-            .background(colorScheme == .dark ? Color(UIColor.systemGray5) : Color.gray.opacity(0.1))
-            .cornerRadius(8)
-            
-            ExpandableSection(totalCount: groupedByCount.count, showingLimit: 10) { isExpanded in
+            VStack(spacing: 10) {
+                HStack {
+                    Text("Page \(currentPage + 1) of \(totalPages)")
+                        .font(.headline)
+                        .foregroundColor(Color(white: 0.9))
+                    Spacer()
+                    HStack(spacing: 15) {
+                        Button(action: { if currentPage < totalPages - 1 { currentPage += 1 } }) {
+                            Image(systemName: "chevron.left.circle.fill")
+                                .font(.title3)
+                                .foregroundColor(currentPage < totalPages - 1 ? .blue : .gray)
+                        }
+                        .disabled(currentPage >= totalPages - 1)
+                        Button(action: { if currentPage > 0 { currentPage -= 1 } }) {
+                            Image(systemName: "chevron.right.circle.fill")
+                                .font(.title3)
+                                .foregroundColor(currentPage > 0 ? .blue : .gray)
+                        }
+                        .disabled(currentPage <= 0)
+                    }
+                }
                 VStack(spacing: 12) {
-                    ForEach(Array(groupedByCount.prefix(isExpanded ? groupedByCount.count : 10)), id: \.count) { group in
-                        FrequencyGroupRow(
-                            count: group.count,
-                            numbers: group.numbers,
-                            colorScheme: colorScheme
-                        )
+                    ForEach(items, id: \.count) { group in
+                        FrequencyGroupRow(count: group.count, numbers: group.numbers)
                     }
                 }
             }
+            .padding()
+            .background(RoundedRectangle(cornerRadius: 12).fill(Color(white: 0.1)))
         }
     }
     
-    private func groupNumbersByCount(_ frequencies: [NumberFrequency]) -> [(count: Int, numbers: [Int])] {
+    private func groupByCount(_ freqs: [NumberFrequency]) -> [(count: Int, numbers: [Int])] {
         var grouped: [Int: [Int]] = [:]
-        
-        for freq in frequencies {
-            if grouped[freq.count] == nil {
-                grouped[freq.count] = []
-            }
-            grouped[freq.count]?.append(freq.number)
-        }
-        
-        let result = grouped.map { (count: $0.key, numbers: $0.value.sorted()) }
-        return result.sorted { $0.count < $1.count }
+        for f in freqs { grouped[f.count, default: []].append(f.number) }
+        return grouped.map { (count: $0.key, numbers: $0.value.sorted()) }.sorted { $0.count < $1.count }
     }
 }
+
+// MARK: - Bonus Analysis View
+
+struct BonusAnalysisView: View {
+    @EnvironmentObject var viewModel: LotteryViewModel
+    @State private var currentPage = 0
+    
+    var body: some View {
+        let frequencies = viewModel.analyzeBonusFrequency()
+        let grouped = groupByCount(frequencies)
+        let itemsPerPage = 10
+        let totalPages = max(1, Int(ceil(Double(grouped.count) / Double(itemsPerPage))))
+        let startIdx = currentPage * itemsPerPage
+        let endIdx = min(startIdx + itemsPerPage, grouped.count)
+        let items = Array(grouped[startIdx..<endIdx])
+        
+        VStack(alignment: .leading, spacing: 15) {
+            Text("Shows how often each bonus number appears")
+                .font(.subheadline)
+                .foregroundColor(Color(white: 0.6))
+            
+            VStack(spacing: 10) {
+                HStack {
+                    Text("Page \(currentPage + 1) of \(totalPages)")
+                        .font(.headline)
+                        .foregroundColor(Color(white: 0.9))
+                    Spacer()
+                    HStack(spacing: 15) {
+                        Button(action: { if currentPage < totalPages - 1 { currentPage += 1 } }) {
+                            Image(systemName: "chevron.left.circle.fill")
+                                .font(.title3)
+                                .foregroundColor(currentPage < totalPages - 1 ? .blue : .gray)
+                        }
+                        .disabled(currentPage >= totalPages - 1)
+                        Button(action: { if currentPage > 0 { currentPage -= 1 } }) {
+                            Image(systemName: "chevron.right.circle.fill")
+                                .font(.title3)
+                                .foregroundColor(currentPage > 0 ? .blue : .gray)
+                        }
+                        .disabled(currentPage <= 0)
+                    }
+                }
+                VStack(spacing: 12) {
+                    ForEach(items, id: \.count) { group in
+                        BonusGroupRow(count: group.count, numbers: group.numbers)
+                    }
+                }
+            }
+            .padding()
+            .background(RoundedRectangle(cornerRadius: 12).fill(Color(white: 0.1)))
+        }
+    }
+    
+    private func groupByCount(_ freqs: [NumberFrequency]) -> [(count: Int, numbers: [Int])] {
+        var grouped: [Int: [Int]] = [:]
+        for f in freqs { grouped[f.count, default: []].append(f.number) }
+        return grouped.map { (count: $0.key, numbers: $0.value.sorted()) }.sorted { $0.count > $1.count }
+    }
+}
+
+// MARK: - Pairs Analysis View
+
+struct PairsAnalysisView: View {
+    @EnvironmentObject var viewModel: LotteryViewModel
+    @State private var currentPage = 0
+    
+    var body: some View {
+        let pairs = viewModel.analyzePairs()
+        let grouped = groupPairsByCount(pairs)
+        let itemsPerPage = 5
+        let totalPages = max(1, Int(ceil(Double(grouped.count) / Double(itemsPerPage))))
+        let startIdx = currentPage * itemsPerPage
+        let endIdx = min(startIdx + itemsPerPage, grouped.count)
+        let items = Array(grouped[startIdx..<endIdx])
+        
+        VStack(alignment: .leading, spacing: 15) {
+            Text("Shows which numbers appear together most often")
+                .font(.subheadline)
+                .foregroundColor(Color(white: 0.6))
+            
+            VStack(spacing: 10) {
+                HStack {
+                    Text("Page \(currentPage + 1) of \(totalPages)")
+                        .font(.headline)
+                        .foregroundColor(Color(white: 0.9))
+                    Spacer()
+                    HStack(spacing: 15) {
+                        Button(action: { if currentPage < totalPages - 1 { currentPage += 1 } }) {
+                            Image(systemName: "chevron.left.circle.fill")
+                                .font(.title3)
+                                .foregroundColor(currentPage < totalPages - 1 ? .blue : .gray)
+                        }
+                        .disabled(currentPage >= totalPages - 1)
+                        Button(action: { if currentPage > 0 { currentPage -= 1 } }) {
+                            Image(systemName: "chevron.right.circle.fill")
+                                .font(.title3)
+                                .foregroundColor(currentPage > 0 ? .blue : .gray)
+                        }
+                        .disabled(currentPage <= 0)
+                    }
+                }
+                VStack(spacing: 12) {
+                    ForEach(items, id: \.count) { group in
+                        PairGroupRow(count: group.count, pairs: group.pairs)
+                    }
+                }
+            }
+            .padding()
+            .background(RoundedRectangle(cornerRadius: 12).fill(Color(white: 0.1)))
+        }
+    }
+    
+    private func groupPairsByCount(_ pairs: [NumberPair]) -> [(count: Int, pairs: [(Int, Int)])] {
+        var grouped: [Int: [(Int, Int)]] = [:]
+        for p in pairs { grouped[p.count, default: []].append((p.number1, p.number2)) }
+        return grouped.map { (count: $0.key, pairs: $0.value) }.sorted { $0.count > $1.count }
+    }
+}
+
+// MARK: - Even/Odd Analysis View
+
+struct EvenOddAnalysisView: View {
+    @EnvironmentObject var viewModel: LotteryViewModel
+    @State private var currentPage = 0
+    
+    var body: some View {
+        let draws = viewModel.getSelectedDraws()
+        let itemsPerPage = 10
+        let totalPages = max(1, Int(ceil(Double(draws.count) / Double(itemsPerPage))))
+        let startIdx = currentPage * itemsPerPage
+        let endIdx = min(startIdx + itemsPerPage, draws.count)
+        let items = Array(draws[startIdx..<endIdx])
+        
+        VStack(alignment: .leading, spacing: 15) {
+            Text("Shows the balance between even and odd numbers")
+                .font(.subheadline)
+                .foregroundColor(Color(white: 0.6))
+            
+            let avgEven = Double(draws.reduce(0) { $0 + $1.evenCount }) / Double(max(1, draws.count))
+            HStack(spacing: 15) {
+                StatBox(title: "Avg Even", value: String(format: "%.1f", avgEven), color: .green)
+                StatBox(title: "Avg Odd", value: String(format: "%.1f", 5.0 - avgEven), color: .orange)
+            }
+            
+            VStack(spacing: 10) {
+                HStack {
+                    Text("Page \(currentPage + 1) of \(totalPages)")
+                        .font(.headline)
+                        .foregroundColor(Color(white: 0.9))
+                    Spacer()
+                    HStack(spacing: 15) {
+                        Button(action: { if currentPage < totalPages - 1 { currentPage += 1 } }) {
+                            Image(systemName: "chevron.left.circle.fill")
+                                .font(.title3)
+                                .foregroundColor(currentPage < totalPages - 1 ? .blue : .gray)
+                        }
+                        .disabled(currentPage >= totalPages - 1)
+                        Button(action: { if currentPage > 0 { currentPage -= 1 } }) {
+                            Image(systemName: "chevron.right.circle.fill")
+                                .font(.title3)
+                                .foregroundColor(currentPage > 0 ? .blue : .gray)
+                        }
+                        .disabled(currentPage <= 0)
+                    }
+                }
+                ForEach(items) { draw in
+                    HStack(spacing: 12) {
+                        Text(draw.dateString)
+                            .font(.caption)
+                            .foregroundColor(Color(white: 0.6))
+                            .frame(width: 70, alignment: .leading)
+                        Text(draw.evenOddRatio)
+                            .font(.system(.caption, design: .monospaced))
+                            .fontWeight(.semibold)
+                            .foregroundColor(Color(white: 0.9))
+                            .frame(width: 40)
+                        HStack(spacing: 3) {
+                            ForEach(0..<draw.evenCount, id: \.self) { _ in
+                                Circle().fill(Color.green).frame(width: 18, height: 18)
+                            }
+                            ForEach(0..<draw.oddCount, id: \.self) { _ in
+                                Circle().fill(Color.orange).frame(width: 18, height: 18)
+                            }
+                        }
+                        Spacer()
+                    }
+                    .padding(.vertical, 4)
+                }
+            }
+            .padding()
+            .background(RoundedRectangle(cornerRadius: 12).fill(Color(white: 0.1)))
+        }
+    }
+}
+
+// MARK: - High/Low Analysis View
+
+struct HighLowAnalysisView: View {
+    @EnvironmentObject var viewModel: LotteryViewModel
+    @State private var currentPage = 0
+    
+    var body: some View {
+        let draws = viewModel.getSelectedDraws()
+        let itemsPerPage = 10
+        let totalPages = max(1, Int(ceil(Double(draws.count) / Double(itemsPerPage))))
+        let startIdx = currentPage * itemsPerPage
+        let endIdx = min(startIdx + itemsPerPage, draws.count)
+        let items = Array(draws[startIdx..<endIdx])
+        
+        VStack(alignment: .leading, spacing: 15) {
+            Text("Low: 1-35, High: 36-70")
+                .font(.subheadline)
+                .foregroundColor(Color(white: 0.6))
+            
+            let avgLow = Double(draws.reduce(0) { $0 + $1.lowCount }) / Double(max(1, draws.count))
+            HStack(spacing: 15) {
+                StatBox(title: "Avg Low", value: String(format: "%.1f", avgLow), color: .blue)
+                StatBox(title: "Avg High", value: String(format: "%.1f", 5.0 - avgLow), color: .red)
+            }
+            
+            VStack(spacing: 10) {
+                HStack {
+                    Text("Page \(currentPage + 1) of \(totalPages)")
+                        .font(.headline)
+                        .foregroundColor(Color(white: 0.9))
+                    Spacer()
+                    HStack(spacing: 15) {
+                        Button(action: { if currentPage < totalPages - 1 { currentPage += 1 } }) {
+                            Image(systemName: "chevron.left.circle.fill")
+                                .font(.title3)
+                                .foregroundColor(currentPage < totalPages - 1 ? .blue : .gray)
+                        }
+                        .disabled(currentPage >= totalPages - 1)
+                        Button(action: { if currentPage > 0 { currentPage -= 1 } }) {
+                            Image(systemName: "chevron.right.circle.fill")
+                                .font(.title3)
+                                .foregroundColor(currentPage > 0 ? .blue : .gray)
+                        }
+                        .disabled(currentPage <= 0)
+                    }
+                }
+                ForEach(items) { draw in
+                    HStack(spacing: 12) {
+                        Text(draw.dateString)
+                            .font(.caption)
+                            .foregroundColor(Color(white: 0.6))
+                            .frame(width: 70, alignment: .leading)
+                        Text(draw.lowHighRatio)
+                            .font(.system(.caption, design: .monospaced))
+                            .fontWeight(.semibold)
+                            .foregroundColor(Color(white: 0.9))
+                            .frame(width: 40)
+                        HStack(spacing: 3) {
+                            ForEach(0..<draw.lowCount, id: \.self) { _ in
+                                Circle().fill(Color.blue).frame(width: 18, height: 18)
+                            }
+                            ForEach(0..<draw.highCount, id: \.self) { _ in
+                                Circle().fill(Color.red).frame(width: 18, height: 18)
+                            }
+                        }
+                        Spacer()
+                    }
+                    .padding(.vertical, 4)
+                }
+            }
+            .padding()
+            .background(RoundedRectangle(cornerRadius: 12).fill(Color(white: 0.1)))
+        }
+    }
+}
+
+// MARK: - Sum Analysis View
+
+struct SumAnalysisView: View {
+    @EnvironmentObject var viewModel: LotteryViewModel
+    @State private var currentPage = 0
+    
+    var body: some View {
+        let draws = viewModel.getSelectedDraws()
+        let itemsPerPage = 10
+        let totalPages = max(1, Int(ceil(Double(draws.count) / Double(itemsPerPage))))
+        let startIdx = currentPage * itemsPerPage
+        let endIdx = min(startIdx + itemsPerPage, draws.count)
+        let items = Array(draws[startIdx..<endIdx])
+        
+        VStack(alignment: .leading, spacing: 15) {
+            Text("Total of all numbers in each draw")
+                .font(.subheadline)
+                .foregroundColor(Color(white: 0.6))
+            
+            let avgSum = Double(draws.reduce(0) { $0 + $1.sum }) / Double(max(1, draws.count))
+            let minSum = draws.map { $0.sum }.min() ?? 0
+            let maxSum = draws.map { $0.sum }.max() ?? 0
+            HStack(spacing: 10) {
+                StatBox(title: "Avg", value: String(format: "%.0f", avgSum), color: .purple)
+                StatBox(title: "Min", value: "\(minSum)", color: .cyan)
+                StatBox(title: "Max", value: "\(maxSum)", color: .pink)
+            }
+            
+            VStack(spacing: 10) {
+                HStack {
+                    Text("Page \(currentPage + 1) of \(totalPages)")
+                        .font(.headline)
+                        .foregroundColor(Color(white: 0.9))
+                    Spacer()
+                    HStack(spacing: 15) {
+                        Button(action: { if currentPage < totalPages - 1 { currentPage += 1 } }) {
+                            Image(systemName: "chevron.left.circle.fill")
+                                .font(.title3)
+                                .foregroundColor(currentPage < totalPages - 1 ? .blue : .gray)
+                        }
+                        .disabled(currentPage >= totalPages - 1)
+                        Button(action: { if currentPage > 0 { currentPage -= 1 } }) {
+                            Image(systemName: "chevron.right.circle.fill")
+                                .font(.title3)
+                                .foregroundColor(currentPage > 0 ? .blue : .gray)
+                        }
+                        .disabled(currentPage <= 0)
+                    }
+                }
+                ForEach(items) { draw in
+                    HStack(spacing: 12) {
+                        Text(draw.dateString)
+                            .font(.caption)
+                            .foregroundColor(Color(white: 0.6))
+                            .frame(width: 70, alignment: .leading)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Main: \(draw.sum)")
+                                .font(.caption)
+                                .foregroundColor(Color(white: 0.7))
+                            if let bonus = draw.bonusNumber {
+                                Text("+ Bonus: \(bonus)")
+                                    .font(.caption)
+                                    .foregroundColor(.orange)
+                            }
+                        }
+                        .frame(width: 90, alignment: .leading)
+                        Text("\(draw.totalSum)")
+                            .font(.title3)
+                            .fontWeight(.bold)
+                            .foregroundColor(.purple)
+                        Spacer()
+                    }
+                    .padding(.vertical, 4)
+                }
+            }
+            .padding()
+            .background(RoundedRectangle(cornerRadius: 12).fill(Color(white: 0.1)))
+        }
+    }
+}
+
+// MARK: - Hot Streak Analysis View
+
+struct HotStreakAnalysisView: View {
+    @EnvironmentObject var viewModel: LotteryViewModel
+    @State private var currentPage = 0
+    
+    var body: some View {
+        let streaks = viewModel.analyzeHotStreaks()
+        let itemsPerPage = 10
+        let totalPages = max(1, Int(ceil(Double(streaks.count) / Double(itemsPerPage))))
+        let startIdx = currentPage * itemsPerPage
+        let endIdx = min(startIdx + itemsPerPage, streaks.count)
+        let items = Array(streaks[startIdx..<endIdx])
+        
+        VStack(alignment: .leading, spacing: 15) {
+            Text("Shows numbers with most appearances in recent 20 draws")
+                .font(.subheadline)
+                .foregroundColor(Color(white: 0.6))
+            
+            VStack(spacing: 10) {
+                HStack {
+                    Text("Page \(currentPage + 1) of \(totalPages)")
+                        .font(.headline)
+                        .foregroundColor(Color(white: 0.9))
+                    Spacer()
+                    HStack(spacing: 15) {
+                        Button(action: { if currentPage < totalPages - 1 { currentPage += 1 } }) {
+                            Image(systemName: "chevron.left.circle.fill")
+                                .font(.title3)
+                                .foregroundColor(currentPage < totalPages - 1 ? .blue : .gray)
+                        }
+                        .disabled(currentPage >= totalPages - 1)
+                        Button(action: { if currentPage > 0 { currentPage -= 1 } }) {
+                            Image(systemName: "chevron.right.circle.fill")
+                                .font(.title3)
+                                .foregroundColor(currentPage > 0 ? .blue : .gray)
+                        }
+                        .disabled(currentPage <= 0)
+                    }
+                }
+                VStack(spacing: 12) {
+                    ForEach(items, id: \.number) { streak in
+                        HotStreakRow(streak: streak)
+                    }
+                }
+            }
+            .padding()
+            .background(RoundedRectangle(cornerRadius: 12).fill(Color(white: 0.1)))
+        }
+    }
+}
+
+
+
+
+// MARK: - Helper Components
 
 // MARK: - Frequency Group Row
 
@@ -396,9 +797,7 @@ struct LeastCommonAnalysisView: View {
 struct FrequencyGroupRow: View {
     let count: Int
     let numbers: [Int]
-    let colorScheme: ColorScheme
-    
-    var body: some View {
+        var body: some View {
         HStack(alignment: .top, spacing: 15) {
             // Count column (left)
             VStack(spacing: 4) {
@@ -409,7 +808,7 @@ struct FrequencyGroupRow: View {
                 
                 Text(count == 1 ? "time" : "times")
                     .font(.caption2)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(Color(white: 0.6))
             }
             .frame(width: 70)
             
@@ -418,17 +817,16 @@ struct FrequencyGroupRow: View {
                 ForEach(numbers, id: \.self) { number in
                     NumberBall(
                         number: number,
-                        color: ballColor,
-                        colorScheme: colorScheme
+                        color: ballColor
                     )
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding()
-        .background(colorScheme == .dark ? Color(UIColor.systemGray6) : Color.white)
+        .background(Color(white: 0.1))
         .cornerRadius(12)
-        .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.3 : 0.08), radius: 4, x: 0, y: 2)
+        .shadow(color: Color.white.opacity(0.05), radius: 4, x: 0, y: 2)
     }
     
     /// Color based on count (red for 0-1, orange for 2-3, yellow for 4+)
@@ -466,16 +864,14 @@ struct FrequencyGroupRow: View {
 struct NumberBall: View {
     let number: Int
     let color: Color
-    let colorScheme: ColorScheme
-    
-    var body: some View {
+        var body: some View {
         Text("\(number)")
             .font(.system(size: 14, weight: .semibold, design: .rounded))
             .foregroundColor(.white)
             .frame(width: 36, height: 36)
             .background(
                 Circle()
-                    .fill(colorScheme == .dark ? color.opacity(0.8) : color)
+                    .fill(color.opacity(0.8))
             )
             .overlay(
                 Circle()
@@ -539,442 +935,12 @@ struct FlowLayout: Layout {
     }
 }
 
-// MARK: - Bonus Analysis View
-
-struct BonusAnalysisView: View {
-    @EnvironmentObject var viewModel: LotteryViewModel
-    @Environment(\.colorScheme) var colorScheme
-    
-    var body: some View {
-        let bonusFreqs = viewModel.analyzeBonusFrequency()
-        let groupedByCount = groupNumbersByCount(bonusFreqs)
-        
-        VStack(alignment: .leading, spacing: 15) {
-            Text("Shows how often each bonus number appears")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-                .padding(.bottom, 5)
-            
-            HStack {
-                Text("Appearances")
-                    .font(.caption)
-                    .fontWeight(.bold)
-                    .foregroundColor(.secondary)
-                    .frame(width: 90, alignment: .leading)
-                
-                Text("Bonus Numbers")
-                    .font(.caption)
-                    .fontWeight(.bold)
-                    .foregroundColor(.secondary)
-            }
-            .padding(.horizontal)
-            .padding(.vertical, 8)
-            .background(colorScheme == .dark ? Color(UIColor.systemGray5) : Color.gray.opacity(0.1))
-            .cornerRadius(8)
-            
-            ExpandableSection(totalCount: groupedByCount.count, showingLimit: 10) { isExpanded in
-                VStack(spacing: 12) {
-                    ForEach(Array(groupedByCount.prefix(isExpanded ? groupedByCount.count : 10)), id: \.count) { group in
-                        BonusGroupRow(
-                            count: group.count,
-                            numbers: group.numbers,
-                            colorScheme: colorScheme
-                        )
-                    }
-                }
-            }
-        }
-    }
-    
-    private func groupNumbersByCount(_ frequencies: [NumberFrequency]) -> [(count: Int, numbers: [Int])] {
-        var grouped: [Int: [Int]] = [:]
-        
-        for freq in frequencies {
-            if grouped[freq.count] == nil {
-                grouped[freq.count] = []
-            }
-            grouped[freq.count]?.append(freq.number)
-        }
-        
-        let result = grouped.map { (count: $0.key, numbers: $0.value.sorted()) }
-        return result.sorted { $0.count > $1.count }
-    }
-}
-
-// MARK: - Pairs Analysis View
-
-struct PairsAnalysisView: View {
-    @EnvironmentObject var viewModel: LotteryViewModel
-    @Environment(\.colorScheme) var colorScheme
-    
-    var body: some View {
-        let pairs = viewModel.analyzePairs()
-        let groupedByCount = groupPairsByCount(pairs)
-        
-        VStack(alignment: .leading, spacing: 15) {
-            Text("Shows which numbers appear together most often")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-                .padding(.bottom, 5)
-            
-            HStack {
-                Text("Appearances")
-                    .font(.caption)
-                    .fontWeight(.bold)
-                    .foregroundColor(.secondary)
-                    .frame(width: 90, alignment: .leading)
-                
-                Text("Number Pairs")
-                    .font(.caption)
-                    .fontWeight(.bold)
-                    .foregroundColor(.secondary)
-            }
-            .padding(.horizontal)
-            .padding(.vertical, 8)
-            .background(colorScheme == .dark ? Color(UIColor.systemGray5) : Color.gray.opacity(0.1))
-            .cornerRadius(8)
-            
-            ExpandableSection(totalCount: groupedByCount.count, showingLimit: 5) { isExpanded in
-                VStack(spacing: 12) {
-                    ForEach(Array(groupedByCount.prefix(isExpanded ? groupedByCount.count : 5)), id: \.count) { group in
-                        PairGroupRow(
-                            count: group.count,
-                            pairs: group.pairs,
-                            colorScheme: colorScheme
-                        )
-                    }
-                }
-            }
-        }
-    }
-    
-    private func groupPairsByCount(_ pairs: [NumberPair]) -> [(count: Int, pairs: [(Int, Int)])] {
-        var grouped: [Int: [(Int, Int)]] = [:]
-        
-        for pair in pairs {
-            if grouped[pair.count] == nil {
-                grouped[pair.count] = []
-            }
-            grouped[pair.count]?.append((pair.number1, pair.number2))
-        }
-        
-        let result = grouped.map { (count: $0.key, pairs: $0.value) }
-        return result.sorted { $0.count > $1.count }
-    }
-}
-
-// MARK: - Even/Odd Analysis View
-
-struct EvenOddAnalysisView: View {
-    @EnvironmentObject var viewModel: LotteryViewModel
-    @Environment(\.colorScheme) var colorScheme
-    @State private var currentMonthIndex = 0
-    
-    var body: some View {
-        let draws = viewModel.getSelectedDraws()
-        let groupedByMonth = groupDrawsByMonth(draws)
-        
-        VStack(alignment: .leading, spacing: 15) {
-            Text("Shows the balance between even and odd numbers")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-                .padding(.bottom, 5)
-            
-            summaryStats(draws: draws)
-            
-            if !groupedByMonth.isEmpty {
-                VStack(alignment: .leading, spacing: 10) {
-                    HStack {
-                        Text(groupedByMonth[currentMonthIndex].monthName)
-                            .font(.headline)
-                            .foregroundColor(colorScheme == .dark ? .white : .black)
-                        
-                        Spacer()
-                        
-                        HStack(spacing: 15) {
-                            Button(action: {
-                                if currentMonthIndex < groupedByMonth.count - 1 {
-                                    withAnimation {
-                                        currentMonthIndex += 1
-                                    }
-                                }
-                            }) {
-                                Image(systemName: "chevron.left.circle.fill")
-                                    .font(.title3)
-                                    .foregroundColor(currentMonthIndex < groupedByMonth.count - 1 ? .blue : .gray)
-                            }
-                            .disabled(currentMonthIndex >= groupedByMonth.count - 1)
-                            
-                            Button(action: {
-                                if currentMonthIndex > 0 {
-                                    withAnimation {
-                                        currentMonthIndex -= 1
-                                    }
-                                }
-                            }) {
-                                Image(systemName: "chevron.right.circle.fill")
-                                    .font(.title3)
-                                    .foregroundColor(currentMonthIndex > 0 ? .blue : .gray)
-                            }
-                            .disabled(currentMonthIndex <= 0)
-                        }
-                    }
-                    
-                    ForEach(groupedByMonth[currentMonthIndex].draws) { draw in
-                        HStack {
-                            Text(draw.dateString)
-                                .font(.caption)
-                                .foregroundColor(colorScheme == .dark ? .white : .black)
-                                .frame(width: 80, alignment: .leading)
-                            
-                            Text(draw.evenOddRatio)
-                                .font(.system(.body, design: .monospaced))
-                                .foregroundColor(colorScheme == .dark ? .white : .black)
-                                .frame(width: 60)
-                            
-                            HStack(spacing: 2) {
-                                ForEach(0..<draw.evenCount, id: \.self) { _ in
-                                    Circle()
-                                        .fill(Color.green)
-                                        .frame(width: 20, height: 20)
-                                }
-                                ForEach(0..<draw.oddCount, id: \.self) { _ in
-                                    Circle()
-                                        .fill(Color.orange)
-                                        .frame(width: 20, height: 20)
-                                }
-                            }
-                            
-                            Spacer()
-                        }
-                        .padding(.vertical, 4)
-                    }
-                }
-                .padding(.top)
-            }
-        }
-    }
-    
-    private func groupDrawsByMonth(_ draws: [LotteryDraw]) -> [(monthName: String, draws: [LotteryDraw])] {
-        let calendar = Calendar.current
-        var grouped: [String: [LotteryDraw]] = [:]
-        
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "MMMM yyyy"
-        
-        for draw in draws {
-            let monthYear = dateFormatter.string(from: draw.date)
-            if grouped[monthYear] == nil {
-                grouped[monthYear] = []
-            }
-            grouped[monthYear]?.append(draw)
-        }
-        
-        return grouped.map { (monthName: $0.key, draws: $0.value.sorted { $0.date > $1.date }) }
-            .sorted { month1, month2 in
-                guard let date1 = dateFormatter.date(from: month1.monthName),
-                      let date2 = dateFormatter.date(from: month2.monthName) else {
-                    return false
-                }
-                return date1 > date2
-            }
-    }
-    
-    private func summaryStats(draws: [LotteryDraw]) -> some View {
-        let avgEven = Double(draws.reduce(0) { $0 + $1.evenCount }) / Double(draws.count)
-        let avgOdd = 5.0 - avgEven
-        
-        return VStack(spacing: 10) {
-            HStack(spacing: 20) {
-                StatBox(
-                    title: "Avg Even",
-                    value: String(format: "%.1f", avgEven),
-                    color: .green
-                )
-                
-                StatBox(
-                    title: "Avg Odd",
-                    value: String(format: "%.1f", avgOdd),
-                    color: .orange
-                )
-            }
-        }
-        .padding(.vertical)
-    }
-}
-
-// MARK: - High/Low Analysis View
-
-struct HighLowAnalysisView: View {
-    @EnvironmentObject var viewModel: LotteryViewModel
-    @Environment(\.colorScheme) var colorScheme
-    
-    var body: some View {
-        let draws = viewModel.getSelectedDraws()
-        
-        VStack(alignment: .leading, spacing: 15) {
-            Text("Low: 1-35, High: 36-70")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-                .padding(.bottom, 5)
-            
-            summaryStats(draws: draws)
-            
-            ExpandableSection(totalCount: draws.count, showingLimit: 10) { isExpanded in
-                VStack(alignment: .leading, spacing: 10) {
-                    ForEach(Array(draws.prefix(isExpanded ? draws.count : 10))) { draw in
-                        HStack {
-                            Text(draw.dateString)
-                                .font(.caption)
-                                .foregroundColor(colorScheme == .dark ? .white : .black)
-                                .frame(width: 80, alignment: .leading)
-                            
-                            Text(draw.lowHighRatio)
-                                .font(.system(.body, design: .monospaced))
-                                .foregroundColor(colorScheme == .dark ? .white : .black)
-                                .frame(width: 60)
-                            
-                            HStack(spacing: 2) {
-                                ForEach(0..<draw.lowCount, id: \.self) { _ in
-                                    Circle()
-                                        .fill(Color.blue)
-                                        .frame(width: 20, height: 20)
-                                }
-                                ForEach(0..<draw.highCount, id: \.self) { _ in
-                                    Circle()
-                                        .fill(Color.red)
-                                        .frame(width: 20, height: 20)
-                                }
-                            }
-                            
-                            Spacer()
-                        }
-                        .padding(.vertical, 4)
-                    }
-                }
-            }
-        }
-    }
-    
-    private func summaryStats(draws: [LotteryDraw]) -> some View {
-        let avgLow = Double(draws.reduce(0) { $0 + $1.lowCount }) / Double(draws.count)
-        let avgHigh = 5.0 - avgLow
-        
-        return VStack(spacing: 10) {
-            HStack(spacing: 20) {
-                StatBox(
-                    title: "Avg Low",
-                    value: String(format: "%.1f", avgLow),
-                    color: .blue
-                )
-                
-                StatBox(
-                    title: "Avg High",
-                    value: String(format: "%.1f", avgHigh),
-                    color: .red
-                )
-            }
-        }
-        .padding(.vertical)
-    }
-}
-
-// MARK: - Sum Analysis View
-
-struct SumAnalysisView: View {
-    @EnvironmentObject var viewModel: LotteryViewModel
-    @Environment(\.colorScheme) var colorScheme
-    
-    var body: some View {
-        let draws = viewModel.getSelectedDraws()
-        
-        VStack(alignment: .leading, spacing: 15) {
-            // REMOVED: Text("Number Sum Analysis")
-            
-            Text("Total of all numbers in each draw")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-                .padding(.bottom, 5)
-            
-            summaryStats(draws: draws)
-            
-            VStack(alignment: .leading, spacing: 10) {
-                Text("By Draw")
-                    .font(.subheadline)
-                    .fontWeight(.semibold)
-                    .foregroundColor(colorScheme == .dark ? .white : .black)
-                
-                ForEach(draws) { draw in
-                    HStack {
-                        Text(draw.dateString)
-                            .font(.caption)
-                            .foregroundColor(colorScheme == .dark ? .white : .black)
-                            .frame(width: 80, alignment: .leading)
-                        
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("Main: \(draw.sum)")
-                                .font(.caption)
-                                .foregroundColor(colorScheme == .dark ? .white : .black)
-                            if let bonus = draw.bonusNumber {
-                                Text("+ Bonus: \(bonus)")
-                                    .font(.caption)
-                                    .foregroundColor(.orange)
-                            }
-                        }
-                        .frame(width: 100, alignment: .leading)
-                        
-                        Text("\(draw.totalSum)")
-                            .font(.title3)
-                            .fontWeight(.bold)
-                            .foregroundColor(.blue)
-                        
-                        Spacer()
-                    }
-                    .padding(.vertical, 4)
-                }
-            }
-            .padding(.top)
-        }
-    }
-    
-    private func summaryStats(draws: [LotteryDraw]) -> some View {
-        let avgSum = Double(draws.reduce(0) { $0 + $1.sum }) / Double(draws.count)
-        let minSum = draws.map { $0.sum }.min() ?? 0
-        let maxSum = draws.map { $0.sum }.max() ?? 0
-        
-        return VStack(spacing: 10) {
-            HStack(spacing: 15) {
-                StatBox(
-                    title: "Avg Sum",
-                    value: String(format: "%.0f", avgSum),
-                    color: .blue
-                )
-                
-                StatBox(
-                    title: "Min Sum",
-                    value: "\(minSum)",
-                    color: .green
-                )
-                
-                StatBox(
-                    title: "Max Sum",
-                    value: "\(maxSum)",
-                    color: .red
-                )
-            }
-        }
-        .padding(.vertical)
-    }
-}
-
 // MARK: - Frequency Group Row (Most Common)
 
 struct FrequencyGroupRowMostCommon: View {
     let count: Int
     let numbers: [Int]
-    let colorScheme: ColorScheme
-    
-    var body: some View {
+        var body: some View {
         HStack(alignment: .top, spacing: 15) {
             VStack(spacing: 4) {
                 Text("\(count)")
@@ -984,7 +950,7 @@ struct FrequencyGroupRowMostCommon: View {
                 
                 Text(count == 1 ? "time" : "times")
                     .font(.caption2)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(Color(white: 0.6))
             }
             .frame(width: 70)
             
@@ -992,17 +958,16 @@ struct FrequencyGroupRowMostCommon: View {
                 ForEach(numbers, id: \.self) { number in
                     NumberBall(
                         number: number,
-                        color: ballColor,
-                        colorScheme: colorScheme
+                        color: ballColor
                     )
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding()
-        .background(colorScheme == .dark ? Color(UIColor.systemGray6) : Color.white)
+        .background(Color(white: 0.1))
         .cornerRadius(12)
-        .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.3 : 0.08), radius: 4, x: 0, y: 2)
+        .shadow(color: Color.white.opacity(0.05), radius: 4, x: 0, y: 2)
     }
     
     private var countColor: Color {
@@ -1033,9 +998,7 @@ struct FrequencyGroupRowMostCommon: View {
 struct BonusGroupRow: View {
     let count: Int
     let numbers: [Int]
-    let colorScheme: ColorScheme
-    
-    var body: some View {
+        var body: some View {
         HStack(alignment: .top, spacing: 15) {
             VStack(spacing: 4) {
                 Text("\(count)")
@@ -1045,7 +1008,7 @@ struct BonusGroupRow: View {
                 
                 Text(count == 1 ? "time" : "times")
                     .font(.caption2)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(Color(white: 0.6))
             }
             .frame(width: 70)
             
@@ -1053,17 +1016,16 @@ struct BonusGroupRow: View {
                 ForEach(numbers, id: \.self) { number in
                     NumberBall(
                         number: number,
-                        color: .orange,
-                        colorScheme: colorScheme
+                        color: .orange
                     )
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding()
-        .background(colorScheme == .dark ? Color(UIColor.systemGray6) : Color.white)
+        .background(Color(white: 0.1))
         .cornerRadius(12)
-        .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.3 : 0.08), radius: 4, x: 0, y: 2)
+        .shadow(color: Color.white.opacity(0.05), radius: 4, x: 0, y: 2)
     }
 }
 
@@ -1072,9 +1034,7 @@ struct BonusGroupRow: View {
 struct PairGroupRow: View {
     let count: Int
     let pairs: [(Int, Int)]
-    let colorScheme: ColorScheme
-    
-    var body: some View {
+        var body: some View {
         HStack(alignment: .top, spacing: 15) {
             VStack(spacing: 4) {
                 Text("\(count)")
@@ -1084,7 +1044,7 @@ struct PairGroupRow: View {
                 
                 Text(count == 1 ? "time" : "times")
                     .font(.caption2)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(Color(white: 0.6))
             }
             .frame(width: 70)
             
@@ -1093,16 +1053,14 @@ struct PairGroupRow: View {
                     HStack(spacing: 2) {
                         NumberBall(
                             number: pair.0,
-                            color: .purple,
-                            colorScheme: colorScheme
+                            color: .purple
                         )
                         Text("-")
                             .font(.caption2)
                             .foregroundColor(.gray)
                         NumberBall(
                             number: pair.1,
-                            color: .purple,
-                            colorScheme: colorScheme
+                            color: .purple
                         )
                     }
                 }
@@ -1110,65 +1068,15 @@ struct PairGroupRow: View {
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding()
-        .background(colorScheme == .dark ? Color(UIColor.systemGray6) : Color.white)
+        .background(Color(white: 0.1))
         .cornerRadius(12)
-        .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.3 : 0.08), radius: 4, x: 0, y: 2)
-    }
-}
-
-// MARK: - Hot Streak Analysis View
-
-struct HotStreakAnalysisView: View {
-    @EnvironmentObject var viewModel: LotteryViewModel
-    @Environment(\.colorScheme) var colorScheme
-    
-    var body: some View {
-        let streaks = viewModel.analyzeHotStreaks()
-        
-        VStack(alignment: .leading, spacing: 15) {
-            Text("Shows numbers with most appearances in recent 20 draws")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-                .padding(.bottom, 5)
-            
-            HStack {
-                Text("Streak")
-                    .font(.caption)
-                    .fontWeight(.bold)
-                    .foregroundColor(.secondary)
-                    .frame(width: 70, alignment: .leading)
-                
-                Text("Number")
-                    .font(.caption)
-                    .fontWeight(.bold)
-                    .foregroundColor(.secondary)
-                    .frame(width: 60, alignment: .leading)
-                
-                Text("Recent Appearances")
-                    .font(.caption)
-                    .fontWeight(.bold)
-                    .foregroundColor(.secondary)
-            }
-            .padding(.horizontal)
-            .padding(.vertical, 8)
-            .background(colorScheme == .dark ? Color(UIColor.systemGray5) : Color.gray.opacity(0.1))
-            .cornerRadius(8)
-            
-            ExpandableSection(totalCount: streaks.count, showingLimit: 10) { isExpanded in
-                VStack(spacing: 12) {
-                    ForEach(Array(streaks.prefix(isExpanded ? streaks.count : 10)), id: \.number) { streak in
-                        HotStreakRow(streak: streak, colorScheme: colorScheme)
-                    }
-                }
-            }
-        }
+        .shadow(color: Color.white.opacity(0.05), radius: 4, x: 0, y: 2)
     }
 }
 
 struct HotStreakRow: View {
     let streak: (number: Int, streak: Int, lastAppearances: [String])
-    let colorScheme: ColorScheme
-    @State private var showAllDates = false
+        @State private var showAllDates = false
     
     var body: some View {
         HStack(alignment: .top, spacing: 15) {
@@ -1180,21 +1088,20 @@ struct HotStreakRow: View {
                 
                 Text(streak.streak == 1 ? "time" : "times")
                     .font(.caption2)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(Color(white: 0.6))
             }
             .frame(width: 60)
             
             NumberBall(
                 number: streak.number,
-                color: .red,
-                colorScheme: colorScheme
+                color: .red
             )
             
             VStack(alignment: .leading, spacing: 2) {
                 ForEach(streak.lastAppearances.prefix(showAllDates ? streak.lastAppearances.count : 3), id: \.self) { date in
                     Text(date)
                         .font(.caption2)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(Color(white: 0.6))
                 }
                 
                 if streak.lastAppearances.count > 3 {
@@ -1213,9 +1120,9 @@ struct HotStreakRow: View {
             Spacer()
         }
         .padding()
-        .background(colorScheme == .dark ? Color(UIColor.systemGray6) : Color.white)
+        .background(Color(white: 0.1))
         .cornerRadius(12)
-        .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.3 : 0.08), radius: 4, x: 0, y: 2)
+        .shadow(color: Color.white.opacity(0.05), radius: 4, x: 0, y: 2)
     }
 }
 
@@ -1225,9 +1132,7 @@ struct StatBox: View {
     let title: String
     let value: String
     let color: Color
-    @Environment(\.colorScheme) var colorScheme
-    
-    var body: some View {
+        var body: some View {
         VStack(spacing: 5) {
             Text(value)
                 .font(.title2)
@@ -1236,11 +1141,11 @@ struct StatBox: View {
             
             Text(title)
                 .font(.caption)
-                .foregroundColor(.secondary)
+                .foregroundColor(Color(white: 0.6))
         }
         .frame(maxWidth: .infinity)
         .padding()
-        .background(colorScheme == .dark ? color.opacity(0.2) : color.opacity(0.1))
+        .background(Color(white: 0.1))
         .cornerRadius(10)
     }
 }
@@ -1249,14 +1154,7 @@ struct StatBox: View {
 
 struct AnalysisView_Previews: PreviewProvider {
     static var previews: some View {
-        Group {
-            AnalysisView()
-                .environmentObject(LotteryViewModel())
-                .preferredColorScheme(.light)
-            
-            AnalysisView()
-                .environmentObject(LotteryViewModel())
-                .preferredColorScheme(.dark)
-        }
+        AnalysisView()
+            .environmentObject(LotteryViewModel())
     }
 }

@@ -188,7 +188,7 @@ struct FetchOptionsView: View {
                 InfoCard(
                     icon: "calendar",
                     title: "Date Range",
-                    value: "2015 - Present",
+                    value: "2002 - Present",
                     color: .blue
                 )
                 

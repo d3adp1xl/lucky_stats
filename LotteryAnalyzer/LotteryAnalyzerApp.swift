@@ -2,20 +2,29 @@
 //  LotteryAnalyzerApp.swift
 //  LotteryAnalyzer
 //
-//  Main app entry point
-//
 
 import SwiftUI
 
-/// Main application structure
 @main
 struct LotteryAnalyzerApp: App {
     
-    // MARK: - Body
+    @State private var showSplash = true
     
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            ZStack {
+                if showSplash {
+                    SplashScreenView {
+                        withAnimation(.easeOut(duration: 1.0)) {
+                            showSplash = false
+                        }
+                    }
+                    .transition(.opacity)
+                } else {
+                    ContentView()
+                        .transition(.opacity)
+                }
+            }
         }
     }
 }

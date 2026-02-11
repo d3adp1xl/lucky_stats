@@ -31,7 +31,7 @@ class LotteryDataFetcher: ObservableObject {
         var offset = 0
         var hasMore = true
         
-        let startDate = "2015-01-01"
+        let startDate = "2002-10-01"
         let currentDate = getCurrentDate()
         
         print("📅 Date range: \(startDate) to \(currentDate)")
@@ -42,7 +42,7 @@ class LotteryDataFetcher: ObservableObject {
             }
             
             // Simplified approach - just fetch without count first
-            while hasMore && offset < 5000 { // Safety limit
+            while hasMore && offset < 15000 { // // Increased for 24 years of data
                 let url = buildSimpleURL(limit: pageSize, offset: offset)
                 print("🔗 Fetching: \(url)")
                 
