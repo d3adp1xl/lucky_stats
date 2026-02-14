@@ -86,8 +86,8 @@ This app teaches:
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/d3adp1xl/lucky_stats.git
-   cd lucky_stats
+   git clone https://github.com/d3adp1xl/lotto-lens.git
+   cd lotto-lens
    ```
 
 2. **Open in Xcode**
@@ -293,7 +293,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **d3adp1xl**
 - GitHub: [@d3adp1xl](https://github.com/d3adp1xl)
-- Repository: [lucky_stats](https://github.com/d3adp1xl/lucky_stats)
+- Repository: [lotto-lens](https://github.com/d3adp1xl/lotto-lens)
 
 ---
 
@@ -309,7 +309,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 📞 Support
 
 If you encounter any issues:
-- [Open an issue](https://github.com/d3adp1xl/lucky_stats/issues)
+- [Open an issue](https://github.com/d3adp1xl/lotto-lens/issues)
 - Check existing issues for solutions
 - Provide detailed bug reports
 
@@ -364,6 +364,6 @@ Potential educational features:
   
   Made with ❤️ and Swift
   
-  [Report an Issue](https://github.com/d3adp1xl/lucky_stats/issues) • [Privacy Policy](PRIVACY_POLICY.md) • [Terms of Service](TERMS_OF_SERVICE.md)
+  [Report an Issue](https://github.com/d3adp1xl/lotto-lens/issues) • [Privacy Policy](PRIVACY_POLICY.md) • [Terms of Service](TERMS_OF_SERVICE.md)
   
 </div>
