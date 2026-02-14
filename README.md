@@ -1,7 +1,7 @@
 <div align="center">
-  <img src="icon.png" alt="Lucky Stats Icon" width="120"/>
+  <img src="icon.png" alt="Lotto Lens Icon" width="120"/>
   
-  # Lucky Stats
+  # Lotto Lens
   
   **Educational Lottery Data Analysis Tool**
   
@@ -14,13 +14,13 @@
 
 ## ⚠️ Important Disclaimer
 
-**Lucky Stats is for entertainment and educational purposes only.** This app analyzes historical lottery data but does not predict future outcomes, guarantee winning numbers, or improve odds of winning. All lottery drawings are random and independent events.
+**Lotto Lens is for entertainment and educational purposes only.** This app analyzes historical lottery data but does not predict future outcomes, guarantee winning numbers, or improve odds of winning. All lottery drawings are random and independent events.
 
 ---
 
 ## 📱 About
 
-Lucky Stats is an educational iOS application that helps users explore and analyze historical Mega Millions lottery data. By examining 24 years of drawing history (2002-present), users can learn about statistical patterns, number frequency, and data visualization concepts.
+Lotto Lens is an educational iOS application that helps users explore and analyze historical Mega Millions lottery data. By examining 24 years of drawing history (2002-present), users can learn about statistical patterns, number frequency, and data visualization concepts.
 
 ### Educational Focus
 
