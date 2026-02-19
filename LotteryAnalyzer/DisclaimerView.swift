@@ -42,7 +42,7 @@ struct DisclaimerView: View {
                             icon: "book.fill",
                             color: .blue,
                             title: "Educational Purpose Only",
-                            text: "Lucky Stats is designed for entertainment and educational purposes. It provides statistical analysis of historical lottery data to help users understand number patterns and trends."
+                            text: "Lotto Lens is designed for entertainment and educational purposes. It provides statistical analysis of historical lottery data to help users understand number patterns and trends."
                         )
                         
                         DisclaimerSection(

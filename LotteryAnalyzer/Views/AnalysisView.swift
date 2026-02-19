@@ -37,68 +37,75 @@ struct AnalysisView: View {
     }
     
     // MARK: - Analysis Navigation Header
-    
+
+    private func analysisColor(_ type: LotteryViewModel.AnalysisType) -> Color {
+        switch type {
+        case .frequency:   return .blue
+        case .leastCommon: return .orange
+        case .bonus:       return .orange
+        case .pairs:       return .purple
+        case .streak:      return .red
+        case .evenOdd:     return .green
+        case .highLow:     return .cyan
+        case .sum:         return .pink
+        }
+    }
+
     private var analysisNavigationHeader: some View {
-        VStack(spacing: 8) {
-            // Top row - Navigation arrows and names
-            HStack(spacing: 12) {
-                // Left - Previous Analysis
-                if let previousAnalysis = getPreviousAnalysisType() {
-                    Button(action: {
-                        withAnimation(.easeInOut) {
-                            viewModel.currentAnalysis = previousAnalysis
-                        }
-                    }) {
-                        HStack(spacing: 6) {
-                            Image(systemName: "arrow.left.circle.fill")
-                                .font(.title3)
-                                .foregroundColor(.red)
-                            
-                            Text(previousAnalysis.rawValue)
-                                .font(.caption)
-                                .foregroundColor(.gray)
-                                .lineLimit(1)
-                        }
+        HStack(spacing: 20) {
+            // Left - Previous Analysis (always blue)
+            if let previousAnalysis = getPreviousAnalysisType() {
+                Button(action: {
+                    withAnimation(.easeInOut) {
+                        viewModel.currentAnalysis = previousAnalysis
                     }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                } else {
-                    Spacer()
-                        .frame(maxWidth: .infinity)
+                }) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "chevron.left.circle.fill")
+                            .font(.title3)
+                            .foregroundColor(.blue)
+                        Text("Previous Analysis")
+                            .font(.subheadline)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.blue)
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .background(Color.blue.opacity(0.15))
+                    .cornerRadius(10)
                 }
-                
+                .buttonStyle(.plain)
+            } else {
                 Spacer()
-                
-                // Right - Next Analysis
-                if let nextAnalysis = getNextAnalysisType() {
-                    Button(action: {
-                        withAnimation(.easeInOut) {
-                            viewModel.currentAnalysis = nextAnalysis
-                        }
-                    }) {
-                        HStack(spacing: 6) {
-                            Text(nextAnalysis.rawValue)
-                                .font(.caption)
-                                .foregroundColor(.gray)
-                                .lineLimit(1)
-                            
-                            Image(systemName: "arrow.right.circle.fill")
-                                .font(.title3)
-                                .foregroundColor(.green)
-                        }
-                    }
-                    .frame(maxWidth: .infinity, alignment: .trailing)
-                } else {
-                    Spacer()
-                        .frame(maxWidth: .infinity)
-                }
             }
-            
-            // Bottom row - Current Analysis (centered, full width)
-            Text(viewModel.currentAnalysis.rawValue)
-                .font(.title2)
-                .fontWeight(.bold)
-                .foregroundColor(Color(white: 0.9))
-                .frame(maxWidth: .infinity, alignment: .center)
+
+            Spacer()
+
+            // Right - Next Analysis (always orange)
+            if let nextAnalysis = getNextAnalysisType() {
+                Button(action: {
+                    withAnimation(.easeInOut) {
+                        viewModel.currentAnalysis = nextAnalysis
+                    }
+                }) {
+                    HStack(spacing: 6) {
+                        Text("Next Analysis")
+                            .font(.subheadline)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.orange)
+                        Image(systemName: "chevron.right.circle.fill")
+                            .font(.title3)
+                            .foregroundColor(.orange)
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .background(Color.orange.opacity(0.15))
+                    .cornerRadius(10)
+                }
+                .buttonStyle(.plain)
+            } else {
+                Spacer()
+            }
         }
     }
     
@@ -281,9 +288,20 @@ struct FrequencyAnalysisView: View {
         let items = Array(grouped[startIdx..<endIdx])
         
         VStack(alignment: .leading, spacing: 15) {
-            Text("Shows which numbers appear most often")
-                .font(.subheadline)
-                .foregroundColor(Color(white: 0.6))
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Number Frequency Analysis")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                    .foregroundColor(.green)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                Text("Tracks how often each number (1–70) has appeared across all selected draws. Numbers with higher frequency may indicate historical patterns. Use this to identify the most drawn numbers over time.")
+                    .font(.body)
+                    .foregroundColor(Color(white: 0.6))
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .padding()
+            .background(Color(white: 0.1))
+            .cornerRadius(12)
             
             VStack(spacing: 10) {
                 HStack {
@@ -340,9 +358,20 @@ struct LeastCommonAnalysisView: View {
         let items = Array(grouped[startIdx..<endIdx])
         
         VStack(alignment: .leading, spacing: 15) {
-            Text("Shows numbers that appear least often")
-                .font(.subheadline)
-                .foregroundColor(Color(white: 0.6))
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Least Common Numbers Analysis")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                    .foregroundColor(.blue)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                Text("Highlights numbers that have appeared the fewest times in selected draws. Some players use overdue numbers as part of their strategy, believing they are statistically due to appear.")
+                    .font(.body)
+                    .foregroundColor(Color(white: 0.6))
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .padding()
+            .background(Color(white: 0.1))
+            .cornerRadius(12)
             
             VStack(spacing: 10) {
                 HStack {
@@ -399,9 +428,20 @@ struct BonusAnalysisView: View {
         let items = Array(grouped[startIdx..<endIdx])
         
         VStack(alignment: .leading, spacing: 15) {
-            Text("Shows how often each bonus number appears")
-                .font(.subheadline)
-                .foregroundColor(Color(white: 0.6))
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Bonus Ball Analysis")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                    .foregroundColor(.orange)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                Text("Analyzes historical frequency of the Mega Ball (1–25) across selected draws. Knowing which bonus numbers appear most often can help you understand patterns in that separate pool of numbers.")
+                    .font(.body)
+                    .foregroundColor(Color(white: 0.6))
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .padding()
+            .background(Color(white: 0.1))
+            .cornerRadius(12)
             
             VStack(spacing: 10) {
                 HStack {
@@ -458,9 +498,20 @@ struct PairsAnalysisView: View {
         let items = Array(grouped[startIdx..<endIdx])
         
         VStack(alignment: .leading, spacing: 15) {
-            Text("Shows which numbers appear together most often")
-                .font(.subheadline)
-                .foregroundColor(Color(white: 0.6))
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Number Pairs Analysis")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                    .foregroundColor(.purple)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                Text("Identifies pairs of numbers that have appeared together most frequently in the same draw. Reveals historical co-occurrence patterns across your selected data range.")
+                    .font(.body)
+                    .foregroundColor(Color(white: 0.6))
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .padding()
+            .background(Color(white: 0.1))
+            .cornerRadius(12)
             
             VStack(spacing: 10) {
                 HStack {
@@ -516,9 +567,20 @@ struct EvenOddAnalysisView: View {
         let items = Array(draws[startIdx..<endIdx])
         
         VStack(alignment: .leading, spacing: 15) {
-            Text("Shows the balance between even and odd numbers")
-                .font(.subheadline)
-                .foregroundColor(Color(white: 0.6))
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Even / Odd Distribution Analysis")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                    .foregroundColor(.green)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                Text("Shows the balance of even vs odd numbers in each draw. Historically, draws tend to mix both. A 3/2 or 2/3 even/odd split is most common — this view helps you spot those trends across your selected draws.")
+                    .font(.body)
+                    .foregroundColor(Color(white: 0.6))
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .padding()
+            .background(Color(white: 0.1))
+            .cornerRadius(12)
             
             let avgEven = Double(draws.reduce(0) { $0 + $1.evenCount }) / Double(max(1, draws.count))
             HStack(spacing: 15) {
@@ -592,9 +654,20 @@ struct HighLowAnalysisView: View {
         let items = Array(draws[startIdx..<endIdx])
         
         VStack(alignment: .leading, spacing: 15) {
-            Text("Low: 1-35, High: 36-70")
-                .font(.subheadline)
-                .foregroundColor(Color(white: 0.6))
+            VStack(alignment: .leading, spacing: 6) {
+                Text("High / Low Range Analysis")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                    .foregroundColor(.blue)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                Text("Splits numbers into low (1–35) and high (36–70) ranges and tracks how each draw is distributed. Most winning draws contain a mix of both ranges — see how often that pattern holds in your selected data.")
+                    .font(.body)
+                    .foregroundColor(Color(white: 0.6))
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .padding()
+            .background(Color(white: 0.1))
+            .cornerRadius(12)
             
             let avgLow = Double(draws.reduce(0) { $0 + $1.lowCount }) / Double(max(1, draws.count))
             HStack(spacing: 15) {
@@ -668,9 +741,20 @@ struct SumAnalysisView: View {
         let items = Array(draws[startIdx..<endIdx])
         
         VStack(alignment: .leading, spacing: 15) {
-            Text("Total of all numbers in each draw")
-                .font(.subheadline)
-                .foregroundColor(Color(white: 0.6))
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Number Sum Analysis")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                    .foregroundColor(.pink)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                Text("Calculates the total sum of the 5 main numbers in each draw. Research shows most winning combinations fall within a mid-range sum. Use this to understand what sum ranges appear most often historically.")
+                    .font(.body)
+                    .foregroundColor(Color(white: 0.6))
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .padding()
+            .background(Color(white: 0.1))
+            .cornerRadius(12)
             
             let avgSum = Double(draws.reduce(0) { $0 + $1.sum }) / Double(max(1, draws.count))
             let minSum = draws.map { $0.sum }.min() ?? 0
@@ -703,29 +787,69 @@ struct SumAnalysisView: View {
                     }
                 }
                 ForEach(items) { draw in
-                    HStack(spacing: 12) {
+                    HStack(spacing: 0) {
+                        // Date
                         Text(draw.dateString)
-                            .font(.caption)
-                            .foregroundColor(Color(white: 0.6))
-                            .frame(width: 70, alignment: .leading)
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("Main: \(draw.sum)")
-                                .font(.caption)
-                                .foregroundColor(Color(white: 0.7))
-                            if let bonus = draw.bonusNumber {
-                                Text("+ Bonus: \(bonus)")
-                                    .font(.caption)
+                            .font(.subheadline)
+                            .foregroundColor(Color(white: 0.7))
+                            .frame(width: 85, alignment: .leading)
+                        
+                        Spacer()
+                        
+                        // Breakdown in card
+                        HStack(spacing: 16) {
+                            // Main numbers sum
+                            VStack(spacing: 2) {
+                                Text("Main 5")
+                                    .font(.caption2)
+                                    .foregroundColor(Color(white: 0.5))
+                                Text("\(draw.sum)")
+                                    .font(.title3)
+                                    .fontWeight(.bold)
+                                    .foregroundColor(.cyan)
+                            }
+                            .frame(minWidth: 60)
+                            
+                            Text("+")
+                                .font(.title3)
+                                .foregroundColor(Color(white: 0.4))
+                            
+                            // Bonus ball
+                            VStack(spacing: 2) {
+                                Text("Bonus Ball")
+                                    .font(.caption2)
+                                    .foregroundColor(Color(white: 0.5))
+                                Text("\(draw.bonusNumber ?? 0)")
+                                    .font(.title3)
+                                    .fontWeight(.bold)
                                     .foregroundColor(.orange)
                             }
+                            .frame(minWidth: 60)
+                            
+                            Text("=")
+                                .font(.title3)
+                                .foregroundColor(Color(white: 0.4))
+                            
+                            // Total
+                            VStack(spacing: 2) {
+                                Text("Total")
+                                    .font(.caption2)
+                                    .foregroundColor(Color(white: 0.5))
+                                Text("\(draw.totalSum)")
+                                    .font(.title2)
+                                    .fontWeight(.bold)
+                                    .foregroundColor(.pink)
+                            }
+                            .frame(minWidth: 60)
                         }
-                        .frame(width: 90, alignment: .leading)
-                        Text("\(draw.totalSum)")
-                            .font(.title3)
-                            .fontWeight(.bold)
-                            .foregroundColor(.purple)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 10)
+                        .background(Color(white: 0.08))
+                        .cornerRadius(10)
+                        
                         Spacer()
                     }
-                    .padding(.vertical, 4)
+                    .padding(.vertical, 6)
                 }
             }
             .padding()
@@ -749,9 +873,20 @@ struct HotStreakAnalysisView: View {
         let items = Array(streaks[startIdx..<endIdx])
         
         VStack(alignment: .leading, spacing: 15) {
-            Text("Shows numbers with most appearances in recent 20 draws")
-                .font(.subheadline)
-                .foregroundColor(Color(white: 0.6))
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Hot Streak Analysis")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                    .foregroundColor(.red)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                Text("Shows which numbers have appeared most frequently in the last 20 selected draws. Hot numbers are currently on a streak — useful for spotting short-term momentum patterns in recent drawing history.")
+                    .font(.body)
+                    .foregroundColor(Color(white: 0.6))
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .padding()
+            .background(Color(white: 0.1))
+            .cornerRadius(12)
             
             VStack(spacing: 10) {
                 HStack {

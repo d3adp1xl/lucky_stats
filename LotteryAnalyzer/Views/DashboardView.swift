@@ -55,6 +55,8 @@ struct DashboardView: View {
             }
             .padding(.top, 10)
             
+            .disabled(viewModel.selectedDraws.isEmpty)
+            
             if showNumbers && !generatedNumbers.isEmpty {
                 VStack(spacing: 15) {
                     HStack(spacing: 6) {
@@ -113,8 +115,17 @@ struct DashboardView: View {
                 .shadow(color: Color.blue.opacity(0.3), radius: 8, x: 0, y: 4)
             }
             .buttonStyle(.plain)
-            .disabled(viewModel.draws.isEmpty)
+            .disabled(viewModel.selectedDraws.isEmpty)
+
+            // Hint text AFTER the button is closed
+            if viewModel.selectedDraws.isEmpty {
+                Text("⚠️ No data selected")
+                    .font(.caption)
+                    .foregroundColor(.orange)
+                    .padding(.top, 4)
+            }
         }
+        
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 20)
@@ -366,23 +377,35 @@ struct DashboardView: View {
     // MARK: - Helper Functions
     
     private func calculateInterestingStats() -> (mostFrequentNumber: String, mostFrequentCount: Int, mostFrequentBonus: String, bonusCount: Int, hotStreakNumber: String, hotStreakCount: Int, luckyPair: String) {
-        let selected = viewModel.draws
         
-        let frequencyAnalyzer = FrequencyAnalyzer()
-        let mainFreqs = frequencyAnalyzer.analyzeMainNumbers(selected)
+        // Use viewModel methods that respect selection/filters
+        let mainFreqs = viewModel.analyzeFrequency()
+        let bonusFreqs = viewModel.analyzeBonusFrequency()
+        let hotStreaks = viewModel.analyzeHotStreaks()
+        let pairs = viewModel.analyzePairs()
+        
+        // Check if data is empty
+        guard !mainFreqs.isEmpty else {
+            return (
+                mostFrequentNumber: "0",
+                mostFrequentCount: 0,
+                mostFrequentBonus: "0",
+                bonusCount: 0,
+                hotStreakNumber: "0",
+                hotStreakCount: 0,
+                luckyPair: "N/A"
+            )
+        }
+        
         let mostFrequent = mainFreqs.first?.number ?? 0
         let mostFrequentCount = mainFreqs.first?.count ?? 0
         
-        let bonusFreqs = frequencyAnalyzer.analyzeBonusNumbers(selected)
         let mostBonus = bonusFreqs.first?.number ?? 0
         let bonusCount = bonusFreqs.first?.count ?? 0
         
-        let hotStreaks = viewModel.analyzeHotStreaks()
         let hotNumber = hotStreaks.first?.number ?? 0
         let hotCount = hotStreaks.first?.streak ?? 0
         
-        let pairAnalyzer = PairAnalyzer()
-        let pairs = pairAnalyzer.analyzeNumberPairs(selected)
         let topPair = pairs.first
         let luckyPairStr = topPair != nil ? "\(topPair!.number1)-\(topPair!.number2)" : "N/A"
         
