@@ -787,17 +787,15 @@ struct SumAnalysisView: View {
                     }
                 }
                 ForEach(items) { draw in
-                    HStack(spacing: 0) {
+                    HStack(spacing: 4) {
                         // Date
                         Text(draw.dateString)
                             .font(.subheadline)
-                            .foregroundColor(Color(white: 0.7))
-                            .frame(width: 85, alignment: .leading)
+                            .foregroundColor(Color(white: 0.6))
+                            .frame(width: 80, alignment: .leading)
                         
-                        Spacer()
-                        
-                        // Breakdown in card
-                        HStack(spacing: 16) {
+                        // Breakdown - use full width
+                        HStack(spacing: 4) {
                             // Main numbers sum
                             VStack(spacing: 2) {
                                 Text("Main 5")
@@ -808,7 +806,7 @@ struct SumAnalysisView: View {
                                     .fontWeight(.bold)
                                     .foregroundColor(.cyan)
                             }
-                            .frame(minWidth: 60)
+                            .frame(maxWidth: .infinity)
                             
                             Text("+")
                                 .font(.title3)
@@ -816,7 +814,7 @@ struct SumAnalysisView: View {
                             
                             // Bonus ball
                             VStack(spacing: 2) {
-                                Text("Bonus Ball")
+                                Text("Bonus")
                                     .font(.caption2)
                                     .foregroundColor(Color(white: 0.5))
                                 Text("\(draw.bonusNumber ?? 0)")
@@ -824,7 +822,7 @@ struct SumAnalysisView: View {
                                     .fontWeight(.bold)
                                     .foregroundColor(.orange)
                             }
-                            .frame(minWidth: 60)
+                            .frame(maxWidth: .infinity)
                             
                             Text("=")
                                 .font(.title3)
@@ -840,16 +838,14 @@ struct SumAnalysisView: View {
                                     .fontWeight(.bold)
                                     .foregroundColor(.pink)
                             }
-                            .frame(minWidth: 60)
+                            .frame(maxWidth: .infinity)
                         }
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 10)
-                        .background(Color(white: 0.08))
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 12)
+                        .background(Color.black.opacity(0.3))
                         .cornerRadius(10)
-                        
-                        Spacer()
                     }
-                    .padding(.vertical, 6)
+                    .padding(.vertical, 4)
                 }
             }
             .padding()

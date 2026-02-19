@@ -31,6 +31,12 @@ struct ContentView: View {
                 }
                 .tag(1)
             
+            HeatmapView()
+                .environmentObject(viewModel)
+                .tabItem {
+                    Label("Heatmap", systemImage: "map.fill")
+                }
+            
             DataView()
                 .environmentObject(viewModel)
                 .tabItem {
