@@ -2,46 +2,42 @@
 //  HeatmapView.swift
 //  LotteryAnalyzer
 //
-//  Interactive number frequency heatmap with beautiful design
-//
 
 import SwiftUI
 
+// MARK: - HeatmapView
+
 struct HeatmapView: View {
     @EnvironmentObject var viewModel: LotteryViewModel
+
     @State private var selectedTimeRange: TimeRange = .thirtyDays
     @State private var numberType: NumberType = .mainNumbers
-    @State private var selectedNumber: Int?
-    @State private var showingNumberDetail = false
+    @State private var selectedSheetItem: NumberSheetItem?
     @State private var animateGrid = false
-    
+    @State private var cachedFrequencies: [Int: Int] = [:]
+    @State private var cachedMaxFreq: Int = 1
+
     var body: some View {
         NavigationView {
             ZStack {
                 Color.black.ignoresSafeArea()
-                
+
                 VStack(spacing: 0) {
-                    // Header with controls
                     controlsSection
                         .padding()
                         .background(
                             LinearGradient(
-                                gradient: Gradient(colors: [
-                                    Color(white: 0.15),
-                                    Color(white: 0.1)
-                                ]),
+                                gradient: Gradient(colors: [Color(white: 0.15), Color(white: 0.1)]),
                                 startPoint: .top,
                                 endPoint: .bottom
                             )
                         )
                         .shadow(color: Color.black.opacity(0.3), radius: 8, x: 0, y: 4)
-                    
-                    // Heatmap Grid
+
                     ScrollView {
                         VStack(spacing: 24) {
                             heatmapGrid
                                 .padding(.top, 20)
-                            
                             legend
                                 .padding(.vertical, 20)
                         }
@@ -51,29 +47,54 @@ struct HeatmapView: View {
             }
             .navigationTitle("")
             .navigationBarHidden(true)
-            .sheet(isPresented: $showingNumberDetail) {
-                if let number = selectedNumber {
-                    NumberDetailSheet(
-                        number: number,
-                        numberType: numberType,
-                        timeRange: selectedTimeRange
-                    )
-                    .environmentObject(viewModel)
-                }
+            .sheet(item: $selectedSheetItem) { item in
+                NumberDetailSheet(
+                    number: item.number,
+                    numberType: item.numberType,
+                    timeRange: item.timeRange
+                )
+                .environmentObject(viewModel)
             }
             .onAppear {
-                withAnimation(.easeInOut(duration: 0.6)) {
-                    animateGrid = true
+                refreshFrequencies()
+            }
+            .onChange(of: selectedTimeRange) { _ in refreshFrequencies() }
+            .onChange(of: numberType) { _ in refreshFrequencies() }
+        }
+    }
+
+    // MARK: - Frequency Cache
+
+    private func refreshFrequencies() {
+        animateGrid = false
+        let allDraws = viewModel.getSelectedDraws()
+        let draws = selectedTimeRange.filterDraws(allDraws)
+        let type = numberType
+
+        DispatchQueue.global(qos: .userInitiated).async {
+            var freq: [Int: Int] = [:]
+            for draw in draws {
+                if type == .mainNumbers {
+                    for n in draw.mainNumbers { freq[n, default: 0] += 1 }
+                } else if let bonus = draw.bonusNumber {
+                    freq[bonus, default: 0] += 1
+                }
+            }
+            let maxF = freq.values.max() ?? 1
+            DispatchQueue.main.async {
+                self.cachedFrequencies = freq
+                self.cachedMaxFreq = maxF
+                withAnimation(.easeInOut(duration: 0.5)) {
+                    self.animateGrid = true
                 }
             }
         }
     }
-    
+
     // MARK: - Controls Section
-    
+
     private var controlsSection: some View {
         VStack(spacing: 20) {
-            // Title
             HStack(spacing: 12) {
                 ZStack {
                     Circle()
@@ -86,43 +107,36 @@ struct HeatmapView: View {
                         )
                         .frame(width: 44, height: 44)
                         .shadow(color: Color.orange.opacity(0.4), radius: 8, x: 0, y: 4)
-                    
                     Image(systemName: "map.fill")
                         .font(.title3)
                         .foregroundColor(.white)
                 }
-                
                 Text("Number Heatmap")
                     .font(.title)
                     .fontWeight(.bold)
                     .foregroundColor(Color(white: 0.95))
-                
                 Spacer()
             }
-            
-            // Time Range Picker
+
             VStack(alignment: .leading, spacing: 10) {
                 Text("TIME RANGE")
                     .font(.caption)
                     .fontWeight(.semibold)
                     .foregroundColor(Color(white: 0.5))
                     .tracking(1)
-                
                 HStack(spacing: 8) {
                     ForEach(TimeRange.allCases, id: \.self) { range in
                         timeRangeButton(range)
                     }
                 }
             }
-            
-            // Number Type Picker
+
             VStack(alignment: .leading, spacing: 10) {
                 Text("NUMBER TYPE")
                     .font(.caption)
                     .fontWeight(.semibold)
                     .foregroundColor(Color(white: 0.5))
                     .tracking(1)
-                
                 HStack(spacing: 12) {
                     ForEach(NumberType.allCases, id: \.self) { type in
                         numberTypeButton(type)
@@ -131,17 +145,11 @@ struct HeatmapView: View {
             }
         }
     }
-    
+
     private func timeRangeButton(_ range: TimeRange) -> some View {
         Button(action: {
             withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                 selectedTimeRange = range
-                animateGrid = false
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                    withAnimation(.easeInOut(duration: 0.6)) {
-                        animateGrid = true
-                    }
-                }
             }
         }) {
             Text(range.rawValue)
@@ -169,23 +177,16 @@ struct HeatmapView: View {
         }
         .buttonStyle(.plain)
     }
-    
+
     private func numberTypeButton(_ type: NumberType) -> some View {
         Button(action: {
             withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                 numberType = type
-                animateGrid = false
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                    withAnimation(.easeInOut(duration: 0.6)) {
-                        animateGrid = true
-                    }
-                }
             }
         }) {
             HStack(spacing: 8) {
                 Image(systemName: type == .mainNumbers ? "circle.grid.3x3.fill" : "star.fill")
                     .font(.caption)
-                
                 Text(type.displayName)
                     .font(.subheadline)
                     .fontWeight(.semibold)
@@ -212,16 +213,14 @@ struct HeatmapView: View {
         }
         .buttonStyle(.plain)
     }
-    
+
     // MARK: - Heatmap Grid
-    
+
     private var heatmapGrid: some View {
-        let frequencies = calculateFrequencies()
         let maxNumber = numberType == .mainNumbers ? 70 : 25
         let columns = numberType == .mainNumbers ? 10 : 5
         let rows = Int(ceil(Double(maxNumber) / Double(columns)))
-        let maxFreq = frequencies.values.max() ?? 1
-        
+
         return VStack(spacing: 10) {
             ForEach(0..<rows, id: \.self) { row in
                 HStack(spacing: 10) {
@@ -230,50 +229,43 @@ struct HeatmapView: View {
                         if number <= maxNumber {
                             numberCell(
                                 number: number,
-                                frequency: frequencies[number] ?? 0,
-                                maxFrequency: maxFreq,
-                                index: row * columns + col
+                                frequency: cachedFrequencies[number] ?? 0,
+                                maxFrequency: cachedMaxFreq
                             )
                         } else {
-                            Color.clear
-                                .frame(height: cellSize)
+                            Color.clear.frame(height: cellSize)
                         }
                     }
                 }
             }
         }
+        .drawingGroup()
+        .scaleEffect(animateGrid ? 1 : 0.95)
+        .opacity(animateGrid ? 1 : 0)
+        .animation(.easeInOut(duration: 0.4), value: animateGrid)
     }
-    
+
     private var cellSize: CGFloat {
         numberType == .mainNumbers ? 50 : 65
     }
-    
-    private func numberCell(number: Int, frequency: Int, maxFrequency: Int, index: Int) -> some View {
+
+    private func numberCell(number: Int, frequency: Int, maxFrequency: Int) -> some View {
         let color = heatColor(frequency: frequency, maxFrequency: maxFrequency)
         let intensity = Double(frequency) / Double(max(maxFrequency, 1))
-        
+
         return Button(action: {
-            selectedNumber = number
-            showingNumberDetail = true
+            selectedSheetItem = NumberSheetItem(
+                number: number,
+                numberType: numberType,
+                timeRange: selectedTimeRange
+            )
             SoundManager.shared.playSound("page_turn")
         }) {
             ZStack {
-                // Glow effect only for very hot numbers
-                if intensity > 0.7 {
-                    Circle()
-                        .fill(color)
-                        .blur(radius: 6)
-                        .opacity(0.3)
-                }
-                
-                // Main cell
                 RoundedRectangle(cornerRadius: 12)
                     .fill(
                         LinearGradient(
-                            gradient: Gradient(colors: [
-                                color,
-                                color.opacity(0.8)
-                            ]),
+                            gradient: Gradient(colors: [color, color.opacity(0.8)]),
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         )
@@ -281,30 +273,16 @@ struct HeatmapView: View {
                     .overlay(
                         RoundedRectangle(cornerRadius: 12)
                             .stroke(
-                                LinearGradient(
-                                    gradient: Gradient(colors: [
-                                        Color.white.opacity(intensity > 0.5 ? 0.3 : 0.1),
-                                        Color.white.opacity(0.05)
-                                    ]),
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                ),
-                                lineWidth: 1.5
+                                intensity > 0.7 ? color.opacity(0.6) : Color.white.opacity(0.1),
+                                lineWidth: intensity > 0.7 ? 2 : 1
                             )
                     )
-                    .shadow(
-                        color: intensity > 0.6 ? color.opacity(0.3) : Color.black.opacity(0.2),
-                        radius: 4,
-                        x: 0,
-                        y: 2
-                    )
-                
-                // Number text
+                    .shadow(color: color.opacity(intensity * 0.35), radius: 3, x: 0, y: 2)
+
                 VStack(spacing: 2) {
                     Text("\(number)")
                         .font(.system(size: numberType == .mainNumbers ? 18 : 22, weight: .bold, design: .rounded))
                         .foregroundColor(.white)
-                    
                     if frequency > 0 {
                         Text("\(frequency)")
                             .font(.system(size: 9, weight: .semibold))
@@ -315,17 +293,10 @@ struct HeatmapView: View {
         }
         .frame(height: cellSize)
         .buttonStyle(.plain)
-        .scaleEffect(animateGrid ? 1 : 0.8)
-        .opacity(animateGrid ? 1 : 0)
-        .animation(
-            .spring(response: 0.6, dampingFraction: 0.7)
-            .delay(Double(index) * 0.01),
-            value: animateGrid
-        )
     }
-    
+
     // MARK: - Legend
-    
+
     private var legend: some View {
         VStack(spacing: 16) {
             Text("FREQUENCY LEGEND")
@@ -334,14 +305,14 @@ struct HeatmapView: View {
                 .foregroundColor(Color(white: 0.5))
                 .tracking(1)
                 .frame(maxWidth: .infinity, alignment: .leading)
-            
+
             VStack(spacing: 10) {
-                legendRow(color: .red, label: "Very Hot", range: "8+ times")
-                legendRow(color: .orange, label: "Hot", range: "6-7 times")
-                legendRow(color: .yellow, label: "Warm", range: "4-5 times")
-                legendRow(color: .green, label: "Neutral", range: "2-3 times")
-                legendRow(color: .cyan, label: "Cool", range: "1 time")
-                legendRow(color: Color(white: 0.3), label: "Cold", range: "0 times")
+                legendRow(color: .red,             label: "Very Hot", range: "8+ times")
+                legendRow(color: .orange,           label: "Hot",      range: "6-7 times")
+                legendRow(color: .yellow,           label: "Warm",     range: "4-5 times")
+                legendRow(color: .green,            label: "Neutral",  range: "2-3 times")
+                legendRow(color: .cyan,             label: "Cool",     range: "1 time")
+                legendRow(color: Color(white: 0.3), label: "Cold",     range: "0 times")
             }
             .padding(16)
             .background(Color(white: 0.1))
@@ -349,7 +320,7 @@ struct HeatmapView: View {
             .shadow(color: Color.black.opacity(0.3), radius: 8, x: 0, y: 4)
         }
     }
-    
+
     private func legendRow(color: Color, label: String, range: String) -> some View {
         HStack(spacing: 12) {
             RoundedRectangle(cornerRadius: 8)
@@ -362,138 +333,113 @@ struct HeatmapView: View {
                 )
                 .frame(width: 40, height: 40)
                 .shadow(color: color.opacity(0.4), radius: 4, x: 0, y: 2)
-            
+
             VStack(alignment: .leading, spacing: 2) {
                 Text(label)
                     .font(.subheadline)
                     .fontWeight(.semibold)
                     .foregroundColor(Color(white: 0.9))
-                
                 Text(range)
                     .font(.caption)
                     .foregroundColor(Color(white: 0.6))
             }
-            
             Spacer()
         }
     }
-    
-    // MARK: - Helper Functions
-    
-    private func calculateFrequencies() -> [Int: Int] {
-        let allDraws = viewModel.getSelectedDraws() // Use selected draws from Data tab
-        let draws = selectedTimeRange.filterDraws(allDraws)
-        var frequencies: [Int: Int] = [:]
-        
-        for draw in draws {
-            if numberType == .mainNumbers {
-                for number in draw.mainNumbers {
-                    frequencies[number, default: 0] += 1
-                }
-            } else {
-                if let bonus = draw.bonusNumber {
-                    frequencies[bonus, default: 0] += 1
-                }
-            }
-        }
-        
-        return frequencies
-    }
-    
+
+    // MARK: - Helpers
+
     private func heatColor(frequency: Int, maxFrequency: Int) -> Color {
         let intensity = Double(frequency) / Double(Swift.max(maxFrequency, 1))
-        
-        if frequency == 0 {
-            return Color(white: 0.2)
-        } else if intensity >= 0.8 {
-            return Color.red
-        } else if intensity >= 0.6 {
-            return Color.orange
-        } else if intensity >= 0.4 {
-            return Color.yellow
-        } else if intensity >= 0.2 {
-            return Color.green
-        } else {
-            return Color.cyan
-        }
+        if frequency == 0   { return Color(white: 0.2) }
+        if intensity >= 0.8 { return .red }
+        if intensity >= 0.6 { return .orange }
+        if intensity >= 0.4 { return .yellow }
+        if intensity >= 0.2 { return .green }
+        return .cyan
     }
 }
 
-// MARK: - Supporting Types
+// MARK: - Supporting Enums
 
 extension HeatmapView {
     enum TimeRange: String, CaseIterable {
-        case sevenDays = "7 Days"
+        case sevenDays  = "7 Days"
         case thirtyDays = "30 Days"
         case ninetyDays = "90 Days"
-        case oneYear = "1 Year"
-        case allTime = "All Time"
-        
+        case oneYear    = "1 Year"
+        case allTime    = "All Time"
+
         func filterDraws(_ draws: [LotteryDraw]) -> [LotteryDraw] {
             let calendar = Calendar.current
             let now = Date()
-            
             switch self {
             case .sevenDays:
-                guard let cutoff = calendar.date(byAdding: .day, value: -7, to: now) else { return draws }
-                return draws.filter { $0.date >= cutoff }
+                guard let c = calendar.date(byAdding: .day, value: -7, to: now) else { return draws }
+                return draws.filter { $0.date >= c }
             case .thirtyDays:
-                guard let cutoff = calendar.date(byAdding: .day, value: -30, to: now) else { return draws }
-                return draws.filter { $0.date >= cutoff }
+                guard let c = calendar.date(byAdding: .day, value: -30, to: now) else { return draws }
+                return draws.filter { $0.date >= c }
             case .ninetyDays:
-                guard let cutoff = calendar.date(byAdding: .day, value: -90, to: now) else { return draws }
-                return draws.filter { $0.date >= cutoff }
+                guard let c = calendar.date(byAdding: .day, value: -90, to: now) else { return draws }
+                return draws.filter { $0.date >= c }
             case .oneYear:
-                guard let cutoff = calendar.date(byAdding: .year, value: -1, to: now) else { return draws }
-                return draws.filter { $0.date >= cutoff }
+                guard let c = calendar.date(byAdding: .year, value: -1, to: now) else { return draws }
+                return draws.filter { $0.date >= c }
             case .allTime:
                 return draws
             }
         }
     }
-    
+
     enum NumberType: String, CaseIterable {
         case mainNumbers = "main"
-        case bonusBall = "bonus"
-        
+        case bonusBall   = "bonus"
+
         var displayName: String {
             switch self {
             case .mainNumbers: return "Main Numbers (1-70)"
-            case .bonusBall: return "Bonus Ball (1-25)"
+            case .bonusBall:   return "Bonus Ball (1-25)"
             }
         }
     }
 }
 
-// MARK: - Number Detail Sheet
+// MARK: - NumberSheetItem
+// Declared AFTER the HeatmapView extension so HeatmapView.NumberType
+// and HeatmapView.TimeRange are fully resolved before this type is compiled.
+
+struct NumberSheetItem: Identifiable {
+    let id = UUID()
+    let number: Int
+    let numberType: HeatmapView.NumberType
+    let timeRange: HeatmapView.TimeRange
+}
+
+// MARK: - NumberDetailSheet
 
 struct NumberDetailSheet: View {
     @EnvironmentObject var viewModel: LotteryViewModel
     @Environment(\.dismiss) var dismiss
-    
+
     let number: Int
     let numberType: HeatmapView.NumberType
     let timeRange: HeatmapView.TimeRange
-    
+
     @State private var frequency: Int = 0
     @State private var lastSeen: String = ""
     @State private var avgGap: Int = 0
     @State private var recentAppearances: [String] = []
-    
+
     var body: some View {
         NavigationView {
             ZStack {
                 Color.black.ignoresSafeArea()
-                
+
                 ScrollView {
                     VStack(spacing: 20) {
-                        // Header
                         numberHeader
-                        
-                        // Stats
                         statsSection
-                        
-                        // Recent appearances
                         recentAppearancesSection
                     }
                     .padding()
@@ -503,10 +449,8 @@ struct NumberDetailSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
-                        dismiss()
-                    }
-                    .foregroundColor(.blue)
+                    Button("Done") { dismiss() }
+                        .foregroundColor(.blue)
                 }
             }
             .task {
@@ -514,7 +458,7 @@ struct NumberDetailSheet: View {
             }
         }
     }
-    
+
     private var numberHeader: some View {
         ZStack {
             RoundedRectangle(cornerRadius: 16)
@@ -528,13 +472,15 @@ struct NumberDetailSheet: View {
                         endPoint: .bottomTrailing
                     )
                 )
-                .shadow(color: (numberType == .mainNumbers ? Color.blue : Color.orange).opacity(0.3), radius: 8, x: 0, y: 4)
-            
+                .shadow(
+                    color: (numberType == .mainNumbers ? Color.blue : Color.orange).opacity(0.3),
+                    radius: 8, x: 0, y: 4
+                )
+
             VStack(spacing: 8) {
                 Text("\(number)")
                     .font(.system(size: 60, weight: .bold, design: .rounded))
                     .foregroundColor(.white)
-                
                 Text(numberType == .mainNumbers ? "Main Number" : "Bonus Ball")
                     .font(.subheadline)
                     .foregroundColor(.white.opacity(0.9))
@@ -543,7 +489,7 @@ struct NumberDetailSheet: View {
         }
         .frame(height: 140)
     }
-    
+
     private var statsSection: some View {
         VStack(spacing: 12) {
             Text("STATISTICS")
@@ -552,32 +498,15 @@ struct NumberDetailSheet: View {
                 .foregroundColor(Color(white: 0.5))
                 .tracking(1)
                 .frame(maxWidth: .infinity, alignment: .leading)
-            
+
             HStack(spacing: 12) {
-                StatCard(
-                    title: "Frequency",
-                    value: "\(frequency)",
-                    subtitle: "times",
-                    color: .blue
-                )
-                
-                StatCard(
-                    title: "Last Seen",
-                    value: lastSeen,
-                    subtitle: "",
-                    color: .green
-                )
-                
-                StatCard(
-                    title: "Avg Gap",
-                    value: "\(avgGap)",
-                    subtitle: "draws",
-                    color: .orange
-                )
+                StatCard(title: "Frequency", value: "\(frequency)",                    subtitle: "times",  color: .blue)
+                StatCard(title: "Last Seen", value: lastSeen.isEmpty ? "—" : lastSeen, subtitle: "",       color: .green)
+                StatCard(title: "Avg Gap",   value: "\(avgGap)",                       subtitle: "draws",  color: .orange)
             }
         }
     }
-    
+
     private var recentAppearancesSection: some View {
         VStack(spacing: 12) {
             Text("RECENT APPEARANCES")
@@ -586,7 +515,7 @@ struct NumberDetailSheet: View {
                 .foregroundColor(Color(white: 0.5))
                 .tracking(1)
                 .frame(maxWidth: .infinity, alignment: .leading)
-            
+
             if recentAppearances.isEmpty {
                 Text("No appearances in selected time range")
                     .font(.subheadline)
@@ -596,13 +525,10 @@ struct NumberDetailSheet: View {
             } else {
                 ForEach(recentAppearances, id: \.self) { date in
                     HStack {
-                        Image(systemName: "calendar")
-                            .foregroundColor(.blue)
-                        
+                        Image(systemName: "calendar").foregroundColor(.blue)
                         Text(date)
                             .font(.subheadline)
                             .foregroundColor(Color(white: 0.9))
-                        
                         Spacer()
                     }
                     .padding()
@@ -612,55 +538,42 @@ struct NumberDetailSheet: View {
             }
         }
     }
-    
+
     private func calculateAllStats() {
         let allDraws = viewModel.getSelectedDraws()
         let draws = timeRange.filterDraws(allDraws)
         var appearances: [LotteryDraw] = []
-        
+
         for draw in draws {
             if numberType == .mainNumbers {
-                if draw.mainNumbers.contains(number) {
-                    appearances.append(draw)
-                }
+                if draw.mainNumbers.contains(number) { appearances.append(draw) }
             } else {
-                if draw.bonusNumber == number {
-                    appearances.append(draw)
-                }
+                if draw.bonusNumber == number { appearances.append(draw) }
             }
         }
-        
+
         frequency = appearances.count
-        
+
         if let last = appearances.first {
             let days = Calendar.current.dateComponents([.day], from: last.date, to: Date()).day ?? 0
-            if days == 0 {
-                lastSeen = "Today"
-            } else if days == 1 {
-                lastSeen = "Yesterday"
-            } else {
-                lastSeen = "\(days) days ago"
-            }
+            lastSeen = days == 0 ? "Today" : days == 1 ? "Yesterday" : "\(days) days ago"
         } else {
             lastSeen = "Never"
         }
-        
-        if appearances.count > 1 {
-            avgGap = draws.count / appearances.count
-        } else {
-            avgGap = 0
-        }
-        
+
+        avgGap = appearances.count > 1 ? draws.count / appearances.count : 0
         recentAppearances = Array(appearances.prefix(8).map { $0.dateString })
     }
 }
+
+// MARK: - StatCard
 
 struct StatCard: View {
     let title: String
     let value: String
     let subtitle: String
     let color: Color
-    
+
     var body: some View {
         VStack(spacing: 6) {
             Text(value)
@@ -669,13 +582,13 @@ struct StatCard: View {
                 .lineLimit(2)
                 .minimumScaleFactor(0.7)
                 .multilineTextAlignment(.center)
-            
+
             if !subtitle.isEmpty {
                 Text(subtitle)
                     .font(.caption2)
                     .foregroundColor(Color(white: 0.6))
             }
-            
+
             Text(title)
                 .font(.caption)
                 .foregroundColor(Color(white: 0.7))

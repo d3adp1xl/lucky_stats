@@ -252,107 +252,205 @@ struct DashboardView: View {
     }
     
     // MARK: - Number Generation Logic
-    
+    //
+    // Strategy blend (in priority order):
+    //   Slot 1-2 → Recency-weighted hot:  ranks 2–7 by exponential-decay score
+    //              (skip rank 1 — the single hottest number rarely sustains)
+    //   Slot 3-4 → Due number analysis:   numbers whose current gap > their historical avg gap
+    //   Slot 5   → Pair anchor:           one number from a top-frequency pair not yet selected
+    //   Fill     → Mid-frequency pool if any slot is still empty after 50 attempts
+    //   Balance  → Attempt to spread picks across low/mid/high decades (1-23, 24-46, 47-70)
+    //   Bonus    → Recency-weighted bonus frequency (same decay model)
+
     private func generateLuckyNumbers() {
-        // ✅ PLAY SOUND
         SoundManager.shared.playSound("lucky_generate")
-        
+
         withAnimation(.spring(response: 0.6, dampingFraction: 0.7)) {
             isAnimating = true
             showNumbers = false
         }
-        
+
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-            let frequencyData = viewModel.analyzeFrequency()
-            let pairData = viewModel.analyzePairs()
-            let hotStreaks = viewModel.analyzeHotStreaks()
+            let draws          = viewModel.getSelectedDraws()
+            let frequencyData  = viewModel.analyzeFrequency()
+            let pairData       = viewModel.analyzePairs()
             let bonusFrequency = viewModel.analyzeBonusFrequency()
-            
-            var selectedNumbers: Set<Int> = []
-            var attempts = 0
-            let maxAttempts = 100
-            
-            let topFrequent = Array(frequencyData.prefix(15))
-            let numFromFrequent = Int.random(in: 1...2)
-            for _ in 0..<numFromFrequent {
-                if let num = weightedRandomFromTop(topFrequent.map { $0.number }, topCount: 10) {
-                    selectedNumbers.insert(num)
+
+            guard !draws.isEmpty, !frequencyData.isEmpty else {
+                withAnimation { isAnimating = false }
+                return
+            }
+
+            // ── 1. Recency-weighted scores ────────────────────────────────────
+            // Score each number using exponential decay: more recent = higher score.
+            // Half-life of 60 draws — an appearance 60 draws ago is worth half
+            // as much as one in the most recent draw.
+            let halfLifeDraws = 60.0
+            var recencyScores: [Int: Double] = [:]
+
+            for (drawIndex, draw) in draws.enumerated() {
+                let recency = Double(draws.count - drawIndex)          // 1 = oldest, draws.count = newest
+                let decayWeight = pow(2.0, recency / halfLifeDraws)    // exponential: newest draws score highest
+                for number in draw.mainNumbers {
+                    recencyScores[number, default: 0] += decayWeight
                 }
             }
-            
-            if !hotStreaks.isEmpty {
-                let hotTop = Array(hotStreaks.prefix(8))
-                if let hotNum = hotTop.randomElement()?.number {
-                    selectedNumbers.insert(hotNum)
+
+            // Sort by recency score descending
+            let recencySorted = recencyScores.sorted { $0.value > $1.value }.map { $0.key }
+
+            // ── 2. Gap / due-number analysis ──────────────────────────────────
+            // For each number compute:
+            //   avgGap      = total draws / appearance count  (expected draws between hits)
+            //   currentGap  = draws since last appearance
+            //   dueRatio    = currentGap / avgGap  (>1.0 means overdue vs its own baseline)
+            var dueScores: [Int: Double] = [:]
+
+            for entry in frequencyData {
+                let num = entry.number
+                guard entry.count > 1 else { continue }   // need at least 2 appearances for a meaningful gap
+
+                let avgGap = Double(draws.count) / Double(entry.count)
+
+                // Find how many draws ago this number last appeared
+                var currentGap = 0
+                for draw in draws {                        // draws[0] = most recent
+                    if draw.mainNumbers.contains(num) { break }
+                    currentGap += 1
+                }
+
+                // Only score numbers that are actually overdue (ratio > 1)
+                let dueRatio = Double(currentGap) / avgGap
+                if dueRatio > 1.0 {
+                    dueScores[num] = dueRatio
                 }
             }
-            
-            if !pairData.isEmpty {
-                let topPairs = Array(pairData.prefix(10))
-                if let randomPair = topPairs.randomElement() {
-                    let pairNums = [randomPair.number1, randomPair.number2]
-                    if let num = pairNums.randomElement() {
-                        selectedNumbers.insert(num)
+
+            // Sort by due ratio descending — most overdue first
+            let dueSorted = dueScores.sorted { $0.value > $1.value }.map { $0.key }
+
+            // ── 3. Build the pick list ────────────────────────────────────────
+            var selected: [Int] = []
+
+            // Helper: add a number only if not already picked
+            func tryAdd(_ num: Int) -> Bool {
+                guard !selected.contains(num) else { return false }
+                selected.append(num)
+                return true
+            }
+
+            // Slot 1: rank-2 recency hot (skip rank-0 = single hottest)
+            let hotPool = Array(recencySorted.dropFirst(1).prefix(8))   // ranks 1-8 (0-indexed)
+            if let pick = hotPool.randomElement() { _ = tryAdd(pick) }
+
+            // Slot 2: another from ranks 2-12 recency, weighted toward top
+            let widerHotPool = Array(recencySorted.dropFirst(1).prefix(12))
+            var slot2Attempts = 0
+            while selected.count < 2 && slot2Attempts < 30 {
+                if let pick = weightedRandom(from: widerHotPool, topBias: 6) { _ = tryAdd(pick) }
+                slot2Attempts += 1
+            }
+
+            // Slot 3: most overdue number (top due ratio)
+            if let dueTop = dueSorted.first(where: { !selected.contains($0) }) {
+                _ = tryAdd(dueTop)
+            }
+
+            // Slot 4: second-most overdue, from a different decade than slot 3 if possible
+            let slot3Decade = selected.last.map { decadeOf($0) }
+            let dueSecond = dueSorted.first(where: { n in
+                !selected.contains(n) && decadeOf(n) != slot3Decade
+            }) ?? dueSorted.first(where: { !selected.contains($0) })
+            if let pick = dueSecond { _ = tryAdd(pick) }
+
+            // Slot 5: pair anchor — one number from a top pair not already represented
+            let topPairs = Array(pairData.prefix(15))
+            var pairAdded = false
+            for pair in topPairs.shuffled() {
+                let pairNums = [pair.number1, pair.number2]
+                // Prefer the pair member NOT already selected (adds a new number)
+                let candidates = pairNums.filter { !selected.contains($0) }
+                if let pick = candidates.randomElement() {
+                    _ = tryAdd(pick)
+                    pairAdded = true
+                    break
+                }
+            }
+            // Fallback if all top-pair numbers already selected
+            if !pairAdded, let pick = topPairs.randomElement() {
+                _ = tryAdd(pick.number1)
+            }
+
+            // ── 4. Fill remaining slots with mid-frequency pool ───────────────
+            // Mid = ranks 8-35 by raw frequency — avoids both "always hot" and genuinely cold
+            let midPool = Array(frequencyData.dropFirst(8).prefix(28)).map { $0.number }
+            var fillAttempts = 0
+            while selected.count < 5 && fillAttempts < 50 {
+                if let pick = midPool.randomElement(), !selected.contains(pick) {
+                    selected.append(pick)
+                }
+                fillAttempts += 1
+            }
+            // Hard fallback (extremely rare)
+            while selected.count < 5 {
+                let r = Int.random(in: 1...70)
+                if !selected.contains(r) { selected.append(r) }
+            }
+
+            // ── 5. Decade balance nudge ───────────────────────────────────────
+            // If all 5 picks land in ≤ 2 decades, swap one for a mid-pool number
+            // from an unrepresented decade. One attempt only — don't over-engineer.
+            let decades = Set(selected.map { decadeOf($0) })
+            if decades.count <= 2 {
+                let missingDecade = [1,2,3,4,5,6,7].first { !decades.contains($0) }
+                if let md = missingDecade {
+                    let decadePool = midPool.filter { decadeOf($0) == md }
+                    if let replacement = decadePool.randomElement(),
+                       let swapIndex = selected.indices.randomElement() {
+                        selected[swapIndex] = replacement
+                        // De-duplicate after swap
+                        if Set(selected).count < 5 {
+                            selected = Array(Set(selected))
+                            while selected.count < 5 {
+                                let r = Int.random(in: 1...70)
+                                if !selected.contains(r) { selected.append(r) }
+                            }
+                        }
                     }
                 }
             }
-            
-            let midFrequent = Array(frequencyData.dropFirst(10).prefix(25))
-            let leastFrequent = Array(frequencyData.suffix(20))
-            
-            while selectedNumbers.count < 5 && attempts < maxAttempts {
-                let strategy = Int.random(in: 0...2)
-                
-                switch strategy {
-                case 0:
-                    if let num = midFrequent.randomElement()?.number {
-                        selectedNumbers.insert(num)
-                    }
-                case 1:
-                    if let num = leastFrequent.randomElement()?.number {
-                        selectedNumbers.insert(num)
-                    }
-                default:
-                    let randomNum = Int.random(in: 1...70)
-                    selectedNumbers.insert(randomNum)
+
+            let sortedNumbers = Array(selected.prefix(5)).sorted()
+
+            // ── 6. Bonus ball: recency-weighted ───────────────────────────────
+            var bonusRecencyScores: [Int: Double] = [:]
+            for (drawIndex, draw) in draws.enumerated() {
+                guard let bonus = draw.bonusNumber else { continue }
+                let recency = Double(draws.count - drawIndex)
+                let decayWeight = pow(2.0, recency / halfLifeDraws)
+                bonusRecencyScores[bonus, default: 0] += decayWeight
+            }
+
+            // Weighted random from bonus scores — not just top pick
+            let bonusSorted = bonusRecencyScores.sorted { $0.value > $1.value }
+            let bonusNum: Int
+
+            if bonusSorted.isEmpty {
+                bonusNum = Int.random(in: 1...25)
+            } else {
+                // Use top 10 bonus candidates, weighted by recency score
+                let bonusCandidates = Array(bonusSorted.prefix(10))
+                let totalWeight = bonusCandidates.reduce(0.0) { $0 + $1.value }
+                let roll = Double.random(in: 0..<totalWeight)
+                var cumulative = 0.0
+                var picked = bonusCandidates.first!.key
+                for candidate in bonusCandidates {
+                    cumulative += candidate.value
+                    if roll < cumulative { picked = candidate.key; break }
                 }
-                
-                attempts += 1
+                bonusNum = picked
             }
-            
-            while selectedNumbers.count < 5 {
-                selectedNumbers.insert(Int.random(in: 1...70))
-            }
-            
-            let sortedNumbers = Array(selectedNumbers.prefix(5)).sorted()
-            
-            var bonusNum = 0
-            let reasonableBonuses = bonusFrequency.filter { $0.count >= 3 }
-            
-            if !reasonableBonuses.isEmpty {
-                let weights = reasonableBonuses.map { Double($0.count) }
-                let totalWeight = weights.reduce(0, +)
-                let random = Double.random(in: 0..<totalWeight)
-                
-                var currentWeight = 0.0
-                for (index, weight) in weights.enumerated() {
-                    currentWeight += weight
-                    if random < currentWeight {
-                        bonusNum = reasonableBonuses[index].number
-                        break
-                    }
-                }
-            }
-            
-            if bonusNum == 0 {
-                if bonusFrequency.count > 10 {
-                    let topHalf = Array(bonusFrequency.prefix(bonusFrequency.count / 2))
-                    bonusNum = topHalf.randomElement()?.number ?? Int.random(in: 1...25)
-                } else {
-                    bonusNum = Int.random(in: 1...25)
-                }
-            }
-            
+
             withAnimation(.spring(response: 0.8, dampingFraction: 0.6)) {
                 generatedNumbers = sortedNumbers
                 generatedBonus = bonusNum
@@ -361,17 +459,25 @@ struct DashboardView: View {
             }
         }
     }
-    
-    private func weightedRandomFromTop(_ numbers: [Int], topCount: Int) -> Int? {
+
+    // MARK: - Generation Helpers
+
+    /// Weighted random that biases toward the first `topBias` elements but can still
+    /// return any element — mimics your original 70/30 split but generalises cleanly.
+    private func weightedRandom(from numbers: [Int], topBias: Int) -> Int? {
         guard !numbers.isEmpty else { return nil }
-        
-        let topNumbers = Array(numbers.prefix(topCount))
-        
-        if Double.random(in: 0...1) < 0.7 {
-            return topNumbers.randomElement()
-        } else {
-            return numbers.randomElement()
-        }
+        let top = Array(numbers.prefix(topBias))
+        return Double.random(in: 0...1) < 0.70 ? top.randomElement() : numbers.randomElement()
+    }
+
+    /// Maps a number (1-70) to one of 7 decades for balance checking.
+    private func decadeOf(_ n: Int) -> Int {
+        return ((n - 1) / 10) + 1   // 1-10 → 1, 11-20 → 2, … 61-70 → 7
+    }
+
+    // Keep original helper for any other call sites
+    private func weightedRandomFromTop(_ numbers: [Int], topCount: Int) -> Int? {
+        weightedRandom(from: numbers, topBias: topCount)
     }
     
     // MARK: - Helper Functions
@@ -532,40 +638,42 @@ struct DrawRowView: View {
     var body: some View {
         HStack(spacing: 10) {
             Text(draw.dateString)
-                .font(.caption)
+                .font(.subheadline)
                 .foregroundColor(Color(white: 0.7))
-                .frame(width: 70, alignment: .leading)
+                .frame(width: 80, height: 32, alignment: .leading)
             
-            HStack(spacing: 4) {
+            HStack(spacing: 5) {
                 ForEach(draw.mainNumbers, id: \.self) { number in
                     Text("\(number)")
-                        .font(.caption)
+                        .font(.subheadline)
                         .fontWeight(.semibold)
                         .foregroundColor(Color(white: 0.9))
-                        .frame(width: 26, height: 26)
+                        .frame(width: 32, height: 32)
                         .background(Color.blue.opacity(0.3))
-                        .cornerRadius(13)
+                        .cornerRadius(16)
                 }
             }
             
             if let bonus = draw.bonusNumber {
                 Text("+")
-                    .font(.caption)
+                    .font(.subheadline)
                     .foregroundColor(Color(white: 0.6))
+                    .frame(height: 32)
                 
                 Text("\(bonus)")
-                    .font(.caption)
+                    .font(.subheadline)
                     .fontWeight(.semibold)
                     .foregroundColor(Color.orange)
-                    .frame(width: 26, height: 26)
+                    .frame(width: 32, height: 32)
                     .background(Color.orange.opacity(0.3))
-                    .cornerRadius(13)
+                    .cornerRadius(16)
             }
             
             Spacer()
         }
+        .frame(maxWidth: .infinity)
         .padding(.horizontal, 12)
-        .padding(.vertical, 8)
+        .padding(.vertical, 12)
         .background(Color(white: 0.08))
     }
 }

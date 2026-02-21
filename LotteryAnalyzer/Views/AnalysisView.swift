@@ -48,6 +48,7 @@ struct AnalysisView: View {
         case .evenOdd:     return .green
         case .highLow:     return .cyan
         case .sum:         return .pink
+        case .gapAnalysis: return .indigo
         }
     }
 
@@ -187,14 +188,16 @@ struct AnalysisView: View {
             BonusAnalysisView()
         case .pairs:
             PairsAnalysisView()
-        case .streak:  // ADD THIS CASE
-            HotStreakAnalysisView()  // ADD THIS
+        case .streak:
+            HotStreakAnalysisView()
         case .evenOdd:
             EvenOddAnalysisView()
         case .highLow:
             HighLowAnalysisView()
         case .sum:
             SumAnalysisView()
+        case .gapAnalysis:
+            GapAnalysisView()
         }
     }
     
@@ -359,12 +362,12 @@ struct LeastCommonAnalysisView: View {
         
         VStack(alignment: .leading, spacing: 15) {
             VStack(alignment: .leading, spacing: 6) {
-                Text("Least Common Numbers Analysis")
+                Text("Least Common Numbers")
                     .font(.title2)
                     .fontWeight(.bold)
                     .foregroundColor(.blue)
                     .frame(maxWidth: .infinity, alignment: .center)
-                Text("Highlights numbers that have appeared the fewest times in selected draws. Some players use overdue numbers as part of their strategy, believing they are statistically due to appear.")
+                Text("These are the coldest numbers in your selected data — appearing the fewest times historically. Unlike the Gap Analysis, low frequency here isn't about being \"due\" — these numbers have simply been drawn less overall. Cold numbers may stay cold. Treat this as a caution list rather than a pick list.")
                     .font(.body)
                     .foregroundColor(Color(white: 0.6))
                     .fixedSize(horizontal: false, vertical: true)
@@ -612,25 +615,30 @@ struct EvenOddAnalysisView: View {
                 ForEach(items) { draw in
                     HStack(spacing: 12) {
                         Text(draw.dateString)
-                            .font(.caption)
-                            .foregroundColor(Color(white: 0.6))
-                            .frame(width: 70, alignment: .leading)
+                            .font(.body)
+                            .fontWeight(.medium)
+                            .foregroundColor(Color(white: 0.7))
+                            .frame(width: 90, alignment: .leading)
                         Text(draw.evenOddRatio)
-                            .font(.system(.caption, design: .monospaced))
-                            .fontWeight(.semibold)
+                            .font(.system(.body, design: .monospaced))
+                            .fontWeight(.bold)
                             .foregroundColor(Color(white: 0.9))
                             .frame(width: 40)
-                        HStack(spacing: 3) {
+                        HStack(spacing: 4) {
                             ForEach(0..<draw.evenCount, id: \.self) { _ in
-                                Circle().fill(Color.green).frame(width: 18, height: 18)
+                                Circle().fill(Color.green).frame(width: 22, height: 22)
                             }
                             ForEach(0..<draw.oddCount, id: \.self) { _ in
-                                Circle().fill(Color.orange).frame(width: 18, height: 18)
+                                Circle().fill(Color.orange).frame(width: 22, height: 22)
                             }
                         }
                         Spacer()
                     }
-                    .padding(.vertical, 4)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 10)
+                    .padding(.horizontal, 16)
+                    .background(Color(white: 0.15))
+                    .cornerRadius(12)
                 }
             }
             .padding()
@@ -699,25 +707,30 @@ struct HighLowAnalysisView: View {
                 ForEach(items) { draw in
                     HStack(spacing: 12) {
                         Text(draw.dateString)
-                            .font(.caption)
-                            .foregroundColor(Color(white: 0.6))
-                            .frame(width: 70, alignment: .leading)
+                            .font(.body)
+                            .fontWeight(.medium)
+                            .foregroundColor(Color(white: 0.7))
+                            .frame(width: 90, alignment: .leading)
                         Text(draw.lowHighRatio)
-                            .font(.system(.caption, design: .monospaced))
-                            .fontWeight(.semibold)
+                            .font(.system(.body, design: .monospaced))
+                            .fontWeight(.bold)
                             .foregroundColor(Color(white: 0.9))
                             .frame(width: 40)
-                        HStack(spacing: 3) {
+                        HStack(spacing: 4) {
                             ForEach(0..<draw.lowCount, id: \.self) { _ in
-                                Circle().fill(Color.blue).frame(width: 18, height: 18)
+                                Circle().fill(Color.blue).frame(width: 22, height: 22)
                             }
                             ForEach(0..<draw.highCount, id: \.self) { _ in
-                                Circle().fill(Color.red).frame(width: 18, height: 18)
+                                Circle().fill(Color.red).frame(width: 22, height: 22)
                             }
                         }
                         Spacer()
                     }
-                    .padding(.vertical, 4)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 10)
+                    .padding(.horizontal, 16)
+                    .background(Color(white: 0.15))
+                    .cornerRadius(12)
                 }
             }
             .padding()
@@ -787,65 +800,66 @@ struct SumAnalysisView: View {
                     }
                 }
                 ForEach(items) { draw in
-                    HStack(spacing: 4) {
+                    HStack(spacing: 10) {
                         // Date
                         Text(draw.dateString)
-                            .font(.subheadline)
-                            .foregroundColor(Color(white: 0.6))
-                            .frame(width: 80, alignment: .leading)
+                            .font(.body)
+                            .fontWeight(.medium)
+                            .foregroundColor(Color(white: 0.7))
+                            .frame(width: 90, alignment: .leading)
                         
-                        // Breakdown - use full width
-                        HStack(spacing: 4) {
-                            // Main numbers sum
-                            VStack(spacing: 2) {
-                                Text("Main 5")
-                                    .font(.caption2)
-                                    .foregroundColor(Color(white: 0.5))
-                                Text("\(draw.sum)")
-                                    .font(.title3)
-                                    .fontWeight(.bold)
-                                    .foregroundColor(.cyan)
-                            }
-                            .frame(maxWidth: .infinity)
-                            
-                            Text("+")
-                                .font(.title3)
-                                .foregroundColor(Color(white: 0.4))
-                            
-                            // Bonus ball
-                            VStack(spacing: 2) {
-                                Text("Bonus")
-                                    .font(.caption2)
-                                    .foregroundColor(Color(white: 0.5))
-                                Text("\(draw.bonusNumber ?? 0)")
-                                    .font(.title3)
-                                    .fontWeight(.bold)
-                                    .foregroundColor(.orange)
-                            }
-                            .frame(maxWidth: .infinity)
-                            
-                            Text("=")
-                                .font(.title3)
-                                .foregroundColor(Color(white: 0.4))
-                            
-                            // Total
-                            VStack(spacing: 2) {
-                                Text("Total")
-                                    .font(.caption2)
-                                    .foregroundColor(Color(white: 0.5))
-                                Text("\(draw.totalSum)")
-                                    .font(.title2)
-                                    .fontWeight(.bold)
-                                    .foregroundColor(.pink)
-                            }
-                            .frame(maxWidth: .infinity)
+                        // Main sum with label
+                        VStack(spacing: 2) {
+                            Text("Main Balls")
+                                .font(.system(size: 9))
+                                .foregroundColor(Color(white: 0.5))
+                            Text("\(draw.sum)")
+                                .font(.body)
+                                .fontWeight(.bold)
+                                .foregroundColor(.cyan)
                         }
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 12)
-                        .background(Color.black.opacity(0.3))
-                        .cornerRadius(10)
+                        
+                        // Plus
+                        Text("+")
+                            .font(.body)
+                            .foregroundColor(Color(white: 0.5))
+                            .padding(.top, 12)
+                        
+                        // Bonus with label
+                        VStack(spacing: 2) {
+                            Text("Bonus")
+                                .font(.system(size: 9))
+                                .foregroundColor(Color(white: 0.5))
+                            Text("\(draw.bonusNumber ?? 0)")
+                                .font(.body)
+                                .fontWeight(.bold)
+                                .foregroundColor(.orange)
+                        }
+                        
+                        // Equals
+                        Text("=")
+                            .font(.body)
+                            .foregroundColor(Color(white: 0.5))
+                            .padding(.top, 12)
+                        
+                        // Total with label
+                        VStack(spacing: 2) {
+                            Text("Total")
+                                .font(.system(size: 9))
+                                .foregroundColor(Color(white: 0.5))
+                            Text("\(draw.totalSum)")
+                                .font(.title3)
+                                .fontWeight(.bold)
+                                .foregroundColor(.pink)
+                        }
+                        
+                        Spacer()
                     }
-                    .padding(.vertical, 4)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 10)
+                    .padding(.horizontal, 16)
+                    .background(Color(white: 0.15))
+                    .cornerRadius(12)
                 }
             }
             .padding()
@@ -1278,6 +1292,387 @@ struct StatBox: View {
         .padding()
         .background(Color(white: 0.1))
         .cornerRadius(10)
+    }
+}
+
+// MARK: - Gap / Due Number Analysis View
+//
+// For each number 1–70:
+//   avgGap    = totalDraws / appearances      → how often it's "expected" to appear
+//   currentGap = draws since last appearance  → how long it has actually been absent
+//   dueRatio  = currentGap / avgGap           → 1.0 = right on schedule, >1.0 = overdue
+//
+// Color scale:
+//   blue   < 0.8   recently appeared, not due
+//   green  0.8-1.0 approaching average cadence
+//   yellow 1.0-1.5 slightly overdue
+//   orange 1.5-2.0 notably overdue
+//   red    > 2.0   very overdue vs own baseline
+
+struct GapEntry: Identifiable {
+    let id = UUID()
+    let number: Int
+    let appearances: Int
+    let avgGap: Double      // draws
+    let currentGap: Int     // draws
+    let dueRatio: Double    // currentGap / avgGap
+    let lastSeen: String    // date string or "Never"
+}
+
+struct GapAnalysisView: View {
+    @EnvironmentObject var viewModel: LotteryViewModel
+    @State private var filter: GapFilter = .all
+    @State private var currentPage = 0
+
+    enum GapFilter: String, CaseIterable {
+        case all        = "All"
+        case overdue    = "Overdue"
+        case veryOverdue = "Very Overdue"
+    }
+
+    var body: some View {
+        let entries = computeGapEntries()
+        let filtered = filteredEntries(entries)
+        let itemsPerPage = 12
+        let totalPages = max(1, Int(ceil(Double(filtered.count) / Double(itemsPerPage))))
+        let safeCurrentPage = min(currentPage, totalPages - 1)
+        let startIdx = safeCurrentPage * itemsPerPage
+        let endIdx = min(startIdx + itemsPerPage, filtered.count)
+        let items = filtered.isEmpty ? [] : Array(filtered[startIdx..<endIdx])
+
+        VStack(alignment: .leading, spacing: 15) {
+
+            // ── Description Card ──────────────────────────────────────────────
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Gap / Due Number Analysis")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                    .foregroundColor(.indigo)
+                    .frame(maxWidth: .infinity, alignment: .center)
+
+                Text("Tracks how long each number has been absent relative to its own historical average gap. A Due Ratio above 1.0 means the number is overdue vs its own baseline — not a guarantee, but a statistically anomalous absence.")
+                    .font(.body)
+                    .foregroundColor(Color(white: 0.6))
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .padding()
+            .background(Color(white: 0.1))
+            .cornerRadius(12)
+
+            // ── Top 3 Most Overdue ────────────────────────────────────────────
+            let topOverdue = entries.filter { $0.appearances > 1 }.prefix(3)
+            if !topOverdue.isEmpty {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("MOST OVERDUE")
+                        .font(.caption)
+                        .fontWeight(.semibold)
+                        .foregroundColor(Color(white: 0.5))
+                        .tracking(1)
+
+                    HStack(spacing: 10) {
+                        ForEach(Array(topOverdue)) { entry in
+                            TopOverdueCard(entry: entry)
+                        }
+                    }
+                }
+                .padding()
+                .background(Color(white: 0.1))
+                .cornerRadius(12)
+            }
+
+            // ── Filter Picker ─────────────────────────────────────────────────
+            HStack(spacing: 8) {
+                ForEach(GapFilter.allCases, id: \.self) { f in
+                    Button(action: {
+                        filter = f
+                        currentPage = 0
+                    }) {
+                        Text(f.rawValue)
+                            .font(.caption)
+                            .fontWeight(.semibold)
+                            .foregroundColor(filter == f ? .white : Color(white: 0.6))
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 8)
+                            .background(
+                                filter == f
+                                    ? AnyView(LinearGradient(
+                                        gradient: Gradient(colors: [Color.indigo, Color.purple]),
+                                        startPoint: .leading, endPoint: .trailing
+                                      ).cornerRadius(10))
+                                    : AnyView(RoundedRectangle(cornerRadius: 10).fill(Color(white: 0.15)))
+                            )
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+
+            // ── Legend ────────────────────────────────────────────────────────
+            HStack(spacing: 6) {
+                legendDot(.blue,   "< 0.8")
+                legendDot(.green,  "0.8–1×")
+                legendDot(.yellow, "1–1.5×")
+                legendDot(.orange, "1.5–2×")
+                legendDot(.red,    "> 2×")
+                Spacer()
+                Text("Due Ratio")
+                    .font(.caption2)
+                    .foregroundColor(Color(white: 0.4))
+            }
+            .padding(.horizontal, 4)
+
+            // ── Paginated List ────────────────────────────────────────────────
+            VStack(spacing: 10) {
+                HStack {
+                    Text("Page \(safeCurrentPage + 1) of \(totalPages)")
+                        .font(.headline)
+                        .foregroundColor(Color(white: 0.9))
+                    Spacer()
+                    HStack(spacing: 15) {
+                        // Left chevron = next page  (matches existing analysis views)
+                        Button(action: {
+                            if currentPage < totalPages - 1 { currentPage += 1 }
+                        }) {
+                            Image(systemName: "chevron.left.circle.fill")
+                                .font(.title3)
+                                .foregroundColor(currentPage < totalPages - 1 ? .indigo : .gray)
+                        }
+                        .disabled(currentPage >= totalPages - 1)
+
+                        // Right chevron = previous page (matches existing analysis views)
+                        Button(action: {
+                            if currentPage > 0 { currentPage -= 1 }
+                        }) {
+                            Image(systemName: "chevron.right.circle.fill")
+                                .font(.title3)
+                                .foregroundColor(currentPage > 0 ? .indigo : .gray)
+                        }
+                        .disabled(currentPage <= 0)
+                    }
+                }
+
+                if items.isEmpty {
+                    Text("No numbers match this filter.")
+                        .font(.subheadline)
+                        .foregroundColor(Color(white: 0.5))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 30)
+                } else {
+                    VStack(spacing: 8) {
+                        ForEach(items) { entry in
+                            GapEntryRow(entry: entry)
+                        }
+                    }
+                }
+            }
+            .padding()
+            .background(RoundedRectangle(cornerRadius: 12).fill(Color(white: 0.1)))
+        }
+    }
+
+    // MARK: - Computation
+
+    private func computeGapEntries() -> [GapEntry] {
+        let draws = viewModel.getSelectedDraws()  // draws[0] = most recent
+        guard !draws.isEmpty else { return [] }
+
+        let totalDraws = draws.count
+        var entries: [GapEntry] = []
+
+        for number in 1...70 {
+            // Count appearances and find last seen date
+            var appearances = 0
+            var lastSeenStr = "Never"
+            var firstAppearanceIndex: Int? = nil  // index of most recent appearance in draws[]
+
+            for (index, draw) in draws.enumerated() {
+                if draw.mainNumbers.contains(number) {
+                    appearances += 1
+                    if firstAppearanceIndex == nil {
+                        firstAppearanceIndex = index
+                        lastSeenStr = draw.dateString
+                    }
+                }
+            }
+
+            // currentGap = how many draws have passed since last appearance
+            // If never appeared, use totalDraws as gap
+            let currentGap = firstAppearanceIndex ?? totalDraws
+
+            // Need at least 2 appearances for a meaningful average gap
+            guard appearances > 1 else {
+                entries.append(GapEntry(
+                    number: number,
+                    appearances: appearances,
+                    avgGap: appearances == 0 ? Double(totalDraws) : Double(totalDraws),
+                    currentGap: currentGap,
+                    dueRatio: appearances == 0 ? 99.0 : Double(currentGap) / Double(totalDraws),
+                    lastSeen: lastSeenStr
+                ))
+                continue
+            }
+
+            let avgGap = Double(totalDraws) / Double(appearances)
+            let dueRatio = Double(currentGap) / avgGap
+
+            entries.append(GapEntry(
+                number: number,
+                appearances: appearances,
+                avgGap: avgGap,
+                currentGap: currentGap,
+                dueRatio: dueRatio,
+                lastSeen: lastSeenStr
+            ))
+        }
+
+        // Sort by dueRatio descending — most overdue first
+        return entries.sorted { $0.dueRatio > $1.dueRatio }
+    }
+
+    private func filteredEntries(_ entries: [GapEntry]) -> [GapEntry] {
+        switch filter {
+        case .all:
+            return entries
+        case .overdue:
+            return entries.filter { $0.dueRatio > 1.0 && $0.appearances > 1 }
+        case .veryOverdue:
+            return entries.filter { $0.dueRatio > 2.0 && $0.appearances > 1 }
+        }
+    }
+
+    private func legendDot(_ color: Color, _ label: String) -> some View {
+        HStack(spacing: 3) {
+            Circle()
+                .fill(color)
+                .frame(width: 8, height: 8)
+            Text(label)
+                .font(.caption2)
+                .foregroundColor(Color(white: 0.5))
+        }
+    }
+}
+
+// MARK: - Top Overdue Card
+
+struct TopOverdueCard: View {
+    let entry: GapEntry
+
+    var body: some View {
+        VStack(spacing: 6) {
+            NumberBall(number: entry.number, color: dueColor(entry.dueRatio))
+
+            Text(String(format: "%.1f×", entry.dueRatio))
+                .font(.system(size: 13, weight: .bold))
+                .foregroundColor(dueColor(entry.dueRatio))
+
+            Text("overdue")
+                .font(.caption2)
+                .foregroundColor(Color(white: 0.5))
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 12)
+        .background(dueColor(entry.dueRatio).opacity(0.12))
+        .cornerRadius(12)
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(dueColor(entry.dueRatio).opacity(0.3), lineWidth: 1)
+        )
+    }
+}
+
+// MARK: - Gap Entry Row
+
+struct GapEntryRow: View {
+    let entry: GapEntry
+
+    var body: some View {
+        HStack(spacing: 12) {
+
+            // Number ball
+            NumberBall(number: entry.number, color: dueColor(entry.dueRatio))
+                .frame(width: 36)
+
+            // Due ratio bar + ratio label
+            VStack(alignment: .leading, spacing: 4) {
+                // Bar: 1.0 = full width of the "normal" zone; cap visual at 3×
+                GeometryReader { geo in
+                    ZStack(alignment: .leading) {
+                        // Background track
+                        RoundedRectangle(cornerRadius: 4)
+                            .fill(Color(white: 0.2))
+                            .frame(height: 8)
+
+                        // 1× marker line
+                        Rectangle()
+                            .fill(Color.white.opacity(0.3))
+                            .frame(width: 1.5, height: 12)
+                            .offset(x: geo.size.width / 3)  // 1× is at 1/3 of the 3× scale
+
+                        // Fill bar
+                        RoundedRectangle(cornerRadius: 4)
+                            .fill(dueColor(entry.dueRatio))
+                            .frame(
+                                width: min(geo.size.width, geo.size.width * CGFloat(entry.dueRatio / 3.0)),
+                                height: 8
+                            )
+                    }
+                }
+                .frame(height: 12)
+
+                HStack(spacing: 6) {
+                    Text(String(format: "%.2f×", entry.dueRatio))
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundColor(dueColor(entry.dueRatio))
+
+                    Text("avg \(String(format: "%.0f", entry.avgGap)) draws")
+                        .font(.caption2)
+                        .foregroundColor(Color(white: 0.45))
+
+                    Text("·")
+                        .foregroundColor(Color(white: 0.3))
+
+                    Text("absent \(entry.currentGap)")
+                        .font(.caption2)
+                        .foregroundColor(Color(white: 0.45))
+                }
+            }
+
+            Spacer(minLength: 0)
+
+            // Last seen
+            VStack(alignment: .trailing, spacing: 2) {
+                Text(entry.lastSeen == "Never" ? "Never" : "Last:")
+                    .font(.caption2)
+                    .foregroundColor(Color(white: 0.4))
+                Text(entry.lastSeen == "Never" ? "" : entry.lastSeen)
+                    .font(.caption2)
+                    .fontWeight(.medium)
+                    .foregroundColor(Color(white: 0.65))
+                Text("\(entry.appearances)×")
+                    .font(.caption2)
+                    .foregroundColor(Color(white: 0.4))
+            }
+            .frame(width: 60, alignment: .trailing)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+        .background(dueColor(entry.dueRatio).opacity(0.07))
+        .cornerRadius(10)
+        .overlay(
+            RoundedRectangle(cornerRadius: 10)
+                .stroke(dueColor(entry.dueRatio).opacity(0.15), lineWidth: 1)
+        )
+    }
+}
+
+// MARK: - Shared due-ratio color helper (file-scoped)
+
+private func dueColor(_ ratio: Double) -> Color {
+    switch ratio {
+    case ..<0.8:  return .blue
+    case 0.8..<1.0: return .green
+    case 1.0..<1.5: return .yellow
+    case 1.5..<2.0: return .orange
+    default:        return .red
     }
 }
 

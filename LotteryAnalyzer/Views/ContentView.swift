@@ -45,7 +45,7 @@ struct ContentView: View {
                 .tag(2)
         }
         .preferredColorScheme(.dark)
-        // ✅ ADD THIS SECTION
+    
         .onAppear {
             if !hasAcceptedDisclaimer {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {

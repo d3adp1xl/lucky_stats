@@ -27,4 +27,17 @@ struct LotteryAnalyzerApp: App {
             }
         }
     }
+    
+    struct LotteryAnalyzerApp: App {
+
+        init() {
+            UIApplication.shared.isIdleTimerDisabled = false  // ← ADD THIS
+        }
+
+        var body: some Scene {
+            WindowGroup {
+                ContentView()
+            }
+        }
+    }
 }

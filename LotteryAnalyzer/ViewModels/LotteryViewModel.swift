@@ -34,6 +34,7 @@ class LotteryViewModel: ObservableObject {
         case evenOdd = "Even/Odd"
         case highLow = "High/Low"
         case sum = "Number Sum"
+        case gapAnalysis = "Gap / Due Analysis"
         
         var icon: String {
             switch self {
@@ -45,6 +46,7 @@ class LotteryViewModel: ObservableObject {
             case .evenOdd: return "circle.lefthalf.filled"
             case .highLow: return "arrow.up.arrow.down"
             case .sum: return "plus.forwardslash.minus"
+            case .gapAnalysis: return "clock.badge.questionmark"
             }
         }
     }
