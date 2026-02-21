@@ -1,14 +1,12 @@
-<div align="center">
-  <img src="icon.png" alt="Lotto Lens Icon" width="120"/>
-  
-  # Lotto Lens
-  
-  **Educational Lottery Data Analysis Tool**
-  
-  [![Swift](https://img.shields.io/badge/Swift-5.9-orange.svg)](https://swift.org)
-  [![Platform](https://img.shields.io/badge/platform-iOS%2017+-blue.svg)](https://developer.apple.com/ios/)
-  [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-</div>
+![Lotto Lens Icon](icon.png)
+
+# Lotto Lens
+
+**Your Personal Lottery Data Analysis Companion**
+
+[![Swift](https://img.shields.io/badge/Swift-5.9-orange.svg)](https://swift.org)
+[![Platform](https://img.shields.io/badge/platform-iOS%2017+-blue.svg)](https://developer.apple.com/ios/)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
 ---
 
@@ -18,274 +16,302 @@
 
 ---
 
-## 📱 About
+## 📱 What is Lotto Lens?
 
-Lotto Lens is an educational iOS application that helps users explore and analyze historical Mega Millions lottery data. By examining 24 years of drawing history (2002-present), users can learn about statistical patterns, number frequency, and data visualization concepts.
+Lotto Lens transforms lottery data analysis with the most comprehensive suite of tools available on iOS. Explore **24 years of Mega Millions history** through **9 powerful analysis methods**, visualize patterns with an **interactive 20-year heatmap**, and maintain **complete control** over your data.
 
-### Educational Focus
+### Key Highlights
 
-This app teaches:
-- Statistical analysis concepts
-- Data visualization techniques
-- Pattern recognition in large datasets
-- Historical trend analysis
-- Probability and randomness principles
-
-### Not a Prediction Tool
-
-**Important:** Past lottery results do not predict future drawings. This app:
-- ❌ Does NOT predict winning numbers
-- ❌ Does NOT guarantee lottery wins
-- ❌ Does NOT improve odds of winning
-- ❌ Does NOT sell lottery tickets
-- ✅ ONLY analyzes historical public data
+🎯 **9 Analysis Methods** - The most comprehensive lottery analysis on iOS  
+🗺️ **20-Year Interactive Heatmap** - Visualize number frequency at a glance  
+⚙️ **Individual Data Control** - Filter, import, and manage your dataset  
+📊 **24 Years of History** - Complete Mega Millions data from 2002-present  
+🎨 **Beautiful Design** - Modern, intuitive dark theme interface  
+🔒 **100% Private** - Zero tracking, all data stays on your device  
 
 ---
 
-## ✨ Features
+## ✨ 9 Powerful Analysis Methods
 
-### 📊 Statistical Analysis Tools
-- **Number Frequency Analysis**: Track which numbers appear most/least often in history
-- **Bonus Ball Analysis**: Examine mega ball historical patterns
-- **Number Pair Analysis**: Discover which numbers appeared together historically
-- **Hot Streak Tracking**: Identify numbers with recent appearance clusters
-- **Even/Odd Distribution**: Visualize balance patterns over time
-- **High/Low Analysis**: Track number range distribution trends
-- **Sum Analysis**: Analyze total sum patterns in drawings
+### 1. 📊 Number Frequency Analysis
+Track which numbers (1-70) appear most and least often in history. Sort by frequency, number, or rarity to identify patterns.
 
-### 🎨 User Interface
-- Clean, modern dark theme design
-- Intuitive pagination for browsing large datasets
-- Clickable shortcuts for quick data access
-- Animated transitions and visual feedback
-- Sound effects for enhanced user experience
+### 2. 📉 Least Common Numbers  
+Dedicated view for historically underrepresented numbers. Perfect for educational pattern recognition.
 
-### 📈 Historical Data
-- 24+ years of Mega Millions data (2002-present)
-- Approximately 1,800+ historical drawings
-- Real-time data fetching from public sources
-- Smart caching for offline functionality
-- Data refresh capability
+### 3. ⭐ Bonus Ball Analysis
+Separate frequency analysis for Mega Ball (1-25) with dedicated statistics and visualizations.
 
-### 🔢 Number Generation Tool
-- Generate number combinations based on historical frequency patterns
-- Uses statistical analysis of past data
-- **Important**: Generated numbers are for educational demonstration only
-- No guarantee of winning or improved odds
+### 4. 👥 Number Pairs Analysis
+Discover which numbers frequently appear together in the same drawing. Co-occurrence pattern recognition at its finest.
+
+### 5. 🔥 Hot Streaks Tracking
+Identify numbers currently appearing more frequently than average. Track current "hot" and "cold" numbers.
+
+### 6. ⚖️ Even/Odd Distribution
+Visualize the balance of even vs odd numbers in each drawing. See distribution patterns over time.
+
+### 7. 📏 High/Low Range Analysis
+Track number distribution between low (1-35) and high (36-70) ranges. Identify balance trends.
+
+### 8. ➕ Number Sum Analysis
+Analyze total sum patterns in drawings. Track main number sums plus bonus to identify common ranges.
+
+### 9. 🔢 Consecutive Numbers
+Track appearances of consecutive number pairs (like 15-16, 42-43). Pattern analysis for sequential numbers.
+
+---
+
+## 🗺️ Interactive 20-Year Heatmap
+
+**Visualize Two Decades of Data in One Beautiful View**
+
+### Features
+- **Color-coded frequency map** - Instantly identify hot (red) and cold (blue) numbers
+- **5 time range options** - 7 days, 30 days, 90 days, 1 year, or all time (20 years)
+- **Number detail sheets** - Tap any number for complete statistics
+- **Dual views** - Separate heatmaps for main numbers (1-70) and bonus balls (1-25)
+- **Real-time updates** - Switch time ranges instantly with smooth animations
+
+### Color Scale
+🔵 Cold (Blue) - Rarely drawn  
+🟢 Cool (Cyan/Green) - Below average  
+🟡 Neutral (Green/Yellow) - Average frequency  
+🟠 Warm (Orange) - Above average  
+🔴 Hot (Red) - Frequently drawn  
+
+### Statistics Per Number
+- Total frequency count
+- Last appearance date
+- Average gap between appearances
+- Recent 8 appearance dates
+- Trend indicators
+
+---
+
+## ⚙️ Complete Individual Data Control
+
+**Your Data, Your Rules**
+
+### Data Management Features
+- ✅ **Custom date ranges** - Analyze any specific time period
+- ✅ **Import CSV files** - Add your own lottery data
+- ✅ **Export analysis** - Save results for later
+- ✅ **Data refresh** - Update with latest drawings on demand
+- ✅ **Offline mode** - All analysis works without internet
+- ✅ **Data validation** - Automatic error checking
+- ✅ **Clear/reset** - Start fresh anytime
+
+### Filter & Focus
+- Filter by date range
+- Focus on specific years
+- Compare different time periods
+- Custom analysis windows
+- Real-time statistics updates
+
+---
+
+## 🎨 Beautiful User Interface
+
+### Dashboard
+- Quick statistics and insights
+- 4 shortcut cards for instant analysis access
+- Lucky number generator (educational)
+- Recent draws with visual representation
+- Clean, intuitive navigation
+
+### Analysis Views
+- Consistent design across all 9 methods
+- Pagination for easy data browsing
+- Visual indicators (circles, colors, charts)
+- Summary statistics at top
+- Smooth animations throughout
+
+### Heatmap
+- Grid layout for all numbers
+- Color gradients showing intensity
+- Interactive tap for details
+- Time range quick-select buttons
+- Number type switcher
 
 ---
 
 ## 🚀 Getting Started
 
-### Prerequisites
-- macOS 14.0+ (Sonoma or later)
+### Download from App Store
+*(Coming Soon)*
+
+1. Open App Store on iPhone/iPad
+2. Search for "Lotto Lens"
+3. Tap "Get" to download
+4. Launch app → Accept disclaimer
+5. Data tab → "Fetch from lottery website"
+6. Wait 3-5 minutes for download
+7. Start exploring!
+
+### For Developers
+
+```bash
+git clone https://github.com/d3adp1xl/lotto-lens.git
+cd lotto-lens
+open LotteryAnalyzer.xcodeproj
+```
+
+**Requirements:**
+- macOS 14.0+
 - Xcode 15.0+
-- iOS 17.0+ (for device/simulator)
-
-### Installation
-
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/d3adp1xl/lotto-lens.git
-   cd lotto-lens
-   ```
-
-2. **Open in Xcode**
-   ```bash
-   open LotteryAnalyzer.xcodeproj
-   ```
-
-3. **Build and Run**
-   - Select your target device/simulator
-   - Press ⌘R or click the Play button
-   - Accept the disclaimer on first launch
-   - Download data from the Data tab (3-5 minutes first time)
+- iOS 17.0+ device/simulator
 
 ---
 
-## 🎮 How to Use
+## 🎯 How to Use
 
 ### First Launch
-1. App displays disclaimer - read and accept
+1. Accept educational disclaimer
 2. Navigate to **Data** tab
-3. Tap **"Fetch from lottery website"**
-4. Wait for approximately 1,800 results to download
-5. Data is cached locally for future use
+3. Tap "Fetch from lottery website"
+4. Download completes in 3-5 minutes
+5. Data cached locally for offline use
 
 ### Explore Analysis
 1. Go to **Analysis** tab
-2. Select any of the 8 analysis types
-3. Browse through pages of historical data
-4. Use pagination controls to navigate
+2. Swipe through 9 different analysis types
+3. Browse data with pagination controls
+4. Tap Dashboard shortcuts for quick access
 
-### Generate Numbers (Educational)
-1. Go to **Dashboard** tab
-2. Tap **"Generate Your Lucky Numbers"**
-3. View numbers generated from historical patterns
-4. **Remember**: These are for educational purposes only
+### Use the Heatmap
+1. Open **Heatmap** tab
+2. Select time range (7 days to 20 years)
+3. Choose Main Numbers or Bonus Ball view
+4. Tap any number to see detailed stats
+5. Watch colors update as you switch ranges
 
-### Quick Access Shortcuts
-1. Dashboard shows 4 shortcut cards
-2. Tap any card to jump to related analysis
-3. Cards display current statistics from data
-
----
-
-## 🛠️ Tech Stack
-
-- **Language**: Swift 5.9
-- **Framework**: SwiftUI
-- **Minimum iOS**: 17.0
-- **Architecture**: MVVM (Model-View-ViewModel)
-- **Data Source**: data.ny.gov Public API
-- **Storage**: UserDefaults (local caching)
-- **Audio**: AVFoundation (sound effects)
+### Manage Your Data
+1. Visit **Data** tab
+2. View total draws, date range, file size
+3. Refresh for latest results
+4. Import custom CSV files
+5. Filter by specific date ranges
+6. Clear and re-download anytime
 
 ---
 
-## 📂 Project Structure
+## 🛠️ Technology
 
-```
-LotteryAnalyzer/
-├── Views/
-│   ├── ContentView.swift           # Main tab navigation
-│   ├── DisclaimerView.swift        # Required disclaimer screen
-│   ├── DashboardView.swift         # Home with number generator
-│   ├── AnalysisView.swift          # 8 statistical analysis views
-│   ├── DataView.swift              # Data management
-│   ├── SplashScreenView.swift      # App startup screen
-│   └── Components/                 # Reusable UI components
-├── ViewModels/
-│   └── LotteryViewModel.swift      # Business logic
-├── Models/
-│   ├── LotteryDraw.swift           # Data models
-│   └── AnalysisTypes.swift         # Analysis structures
-├── Services/
-│   ├── LotteryDataFetcher.swift    # API integration
-│   ├── FrequencyAnalyzer.swift     # Statistical analysis
-│   ├── PairAnalyzer.swift          # Pair correlation
-│   └── SoundManager.swift          # Audio playback
-└── Resources/
-    ├── Assets.xcassets             # Images and colors
-    └── Sounds/                     # Sound effects (if added)
-```
-
----
-
-## 🎵 Sound Effects
-
-The app includes optional sound effects:
-- Splash screen: Startup sound
-- Number generation: Confirmation sound
-
-To add your own sounds:
-1. Add MP3 files to project
-2. Name them: `deadpixl_intro.mp3` and `lucky_generate.mp3`
-3. Add to Xcode target
-4. Rebuild app
+- **Swift 5.9** - Modern Swift programming
+- **SwiftUI** - 100% declarative UI framework
+- **iOS 17.0+** - Latest iOS features
+- **MVVM Architecture** - Clean, maintainable code
+- **Async/Await** - Modern concurrency
+- **NY Open Data** - Public lottery data API
+- **Local Storage** - Privacy-first data handling
 
 ---
 
 ## 📊 Data Source
 
 **New York State Open Data Portal**
-- Dataset: Mega Millions Winning Numbers
-- URL: https://data.ny.gov
-- Coverage: October 2002 - Present
-- Update Frequency: After each drawing
-- Format: JSON via SODA API
-- License: Public domain
+
+- **Dataset**: Mega Millions Winning Numbers
+- **Coverage**: October 2002 - Present (24+ years)
+- **Frequency**: Updated after each drawing
+- **Format**: JSON via SODA API
+- **License**: Public domain
+- **Records**: ~1,800+ drawings
+
+**Includes:**
+- Draw dates
+- 5 main numbers (1-70)
+- 1 Mega Ball (1-25)
+- Multiplier info
+- Jackpot amounts
 
 ---
 
-## 📜 Legal & Compliance
+## 🔒 Privacy & Security
 
-### Disclaimers
+### Zero Data Collection
+- ✅ No analytics
+- ✅ No tracking
+- ✅ No user accounts
+- ✅ No personal data
+- ✅ No advertising
+- ✅ All data local
+- ✅ Works offline
 
-**Educational Purpose:**
-This app is designed for entertainment and educational purposes only. It does not predict lottery outcomes or improve odds of winning.
+### What's Stored Locally
+- Historical lottery results (public data)
+- App preferences
+- Cached data
 
-**No Gambling Facilitation:**
-This app does not:
-- Sell lottery tickets
-- Process gambling transactions
-- Facilitate betting
-- Accept payments for gambling
+### Never Collected
+- Your identity
+- Your location
+- Usage patterns
+- Device info
 
-**Age Requirement:**
-Users must be 18+ years old (or legal age in their jurisdiction) to use this app.
+**See our [Privacy Policy](PRIVACY_POLICY.md) for details.**
 
-**Play Responsibly:**
-If you choose to play the lottery, please do so responsibly and within your means.
+---
 
-### Privacy
+## 📜 Legal
 
-We respect your privacy:
-- ✅ NO personal data collection
-- ✅ NO tracking or analytics
-- ✅ NO advertising
-- ✅ NO account required
-- ✅ All data stored locally
+### Educational Purpose Only
 
-See our [Privacy Policy](PRIVACY_POLICY.md) for details.
+❌ **Does NOT:**
+- Predict future outcomes
+- Guarantee wins
+- Improve odds
+- Provide financial advice
+- Sell tickets
+- Process gambling
 
-### Terms of Service
+✅ **Does:**
+- Analyze historical data
+- Teach statistics
+- Visualize patterns
+- Demonstrate analysis
 
-By using this app, you agree to our [Terms of Service](TERMS_OF_SERVICE.md).
+### Lottery Facts
+- 🎲 All draws are random
+- 📊 Past ≠ Future
+- 🔢 Equal probability each time
+- 📈 Patterns ≠ Better odds
+- 💡 Pure chance
+
+### Responsible Use
+- 18+ required
+- Play responsibly
+- Set a budget
+- Treat as entertainment
+- Remember: likely to lose
+
+**See [Terms of Service](TERMS_OF_SERVICE.md)**
 
 ---
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please:
+Contributions welcome!
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/Enhancement`)
-3. Commit your changes (`git commit -m 'Add enhancement'`)
-4. Push to the branch (`git push origin feature/Enhancement`)
-5. Open a Pull Request
+1. Fork repository
+2. Create feature branch
+3. Commit changes
+4. Push to branch
+5. Open pull request
 
-### Contribution Guidelines
+**Guidelines:**
 - Maintain educational focus
-- No gambling promotion
-- Keep disclaimers intact
+- Keep disclaimers
 - Follow Swift style guide
-- Add tests for new features
+- Add tests
+- Update docs
 
 ---
 
 ## 📝 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
-## ⚠️ Important Notices
-
-### For Users
-
-**This app does not:**
-- Predict future lottery outcomes
-- Guarantee winning numbers
-- Improve your odds of winning
-- Provide financial advice
-- Sell lottery tickets
-
-**Lottery Facts:**
-- All drawings are random
-- Past results don't predict future outcomes
-- Each number has equal probability
-- Statistical patterns don't improve odds
-- This is a game of chance
-
-### For Developers
-
-**App Store Compliance:**
-- Disclaimer screen is required
-- Age rating: 12+ minimum
-- Category: Education or Utilities
-- No prediction claims allowed
-- Privacy policy required
+MIT License - see [LICENSE](LICENSE) file.
 
 ---
 
@@ -293,77 +319,71 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **d3adp1xl**
 - GitHub: [@d3adp1xl](https://github.com/d3adp1xl)
-- Repository: [lotto-lens](https://github.com/d3adp1xl/lotto-lens)
+- Repo: [lotto-lens](https://github.com/d3adp1xl/lotto-lens)
 
 ---
 
-## 🙏 Acknowledgments
+## 🎓 Educational Value
 
-- Data provided by New York State Open Data Portal
-- Lottery data is public domain
-- Built with SwiftUI and modern iOS development practices
-- Inspired by statistical analysis and data visualization
-
----
-
-## 📞 Support
-
-If you encounter any issues:
-- [Open an issue](https://github.com/d3adp1xl/lotto-lens/issues)
-- Check existing issues for solutions
-- Provide detailed bug reports
-
-**For general questions:**
-- Read the documentation
-- Check the FAQ (coming soon)
-- Review closed issues
+**Learn:**
+- Frequency distribution
+- Data visualization
+- Statistical analysis
+- Pattern recognition
+- iOS SwiftUI development
+- Large dataset handling
 
 ---
 
-## 🎯 Educational Value
+## 📊 Statistics
 
-This app demonstrates:
-- **Data Analysis**: Working with large datasets
-- **Statistical Methods**: Frequency analysis, trend identification
-- **SwiftUI Development**: Modern iOS app architecture
-- **API Integration**: Fetching and caching remote data
-- **User Experience**: Intuitive interface design
-- **Data Visualization**: Charts and graphs
-- **Responsible Design**: Ethical considerations in app development
+- **Code**: 100% Swift
+- **UI**: 100% SwiftUI
+- **Analysis Methods**: 9
+- **Heatmap Coverage**: 20 years
+- **Total History**: 24 years
+- **Data Points**: ~1,800+ draws
 
 ---
 
-## 📈 Future Enhancements (Ideas)
+## 🏆 Why Lotto Lens?
 
-Potential educational features:
-- Additional lottery games (Powerball, etc.)
-- More statistical analysis types
-- Data export functionality (CSV, PDF)
-- Comparison tools between different time periods
-- Advanced visualization options
-- Widget support
-- Dark/light theme toggle
+### Most Comprehensive
+✅ 9 analysis methods - More than any other app  
+✅ 20-year interactive heatmap  
+✅ 24 years complete dataset  
 
-**Note**: All enhancements maintain educational focus only.
+### Most Flexible
+✅ Individual data control  
+✅ Custom date filtering  
+✅ Import your own data  
+
+### Most Private
+✅ Zero tracking  
+✅ All data local  
+✅ Works offline  
+
+### Most Beautiful
+✅ Modern iOS design  
+✅ Smooth animations  
+✅ Intuitive interface  
 
 ---
 
-## ⚖️ Legal
+## ⭐ Star This Repo
 
-**Disclaimer:** This is an independent educational project. We are not affiliated with, endorsed by, or connected to Mega Millions, any state lottery organization, or lottery vendors.
-
-**Lottery Trademark:** "Mega Millions" is a registered trademark of the Mega Millions Group.
-
-**App Purpose:** Educational and entertainment only. Does not predict outcomes or improve odds.
+If you find Lotto Lens useful:
+- ⭐ Star this repository
+- 🔄 Share with others
+- 🐛 Report bugs
+- 💡 Suggest features
 
 ---
 
-<div align="center">
-  
-  **Play Responsibly | For Educational Purposes Only | 18+ Only**
-  
-  Made with ❤️ and Swift
-  
-  [Report an Issue](https://github.com/d3adp1xl/lotto-lens/issues) • [Privacy Policy](PRIVACY_POLICY.md) • [Terms of Service](TERMS_OF_SERVICE.md)
-  
-</div>
+**Made with ❤️ and Swift**
+
+**Play Responsibly | Educational Only | 18+ Required**
+
+---
+
+[🐛 Report Issue](https://github.com/d3adp1xl/lotto-lens/issues) • [🔒 Privacy](PRIVACY_POLICY.md) • [📜 Terms](TERMS_OF_SERVICE.md) • [⭐ Star](https://github.com/d3adp1xl/lotto-lens)
